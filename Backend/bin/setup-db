@@ -1,0 +1,41 @@
+#!/usr/bin/env node
+/**
+ * Database setup script
+ * Creates necessary tables and initial data
+ */
+
+require('dotenv').config();
+const { db } = require('../lib/database');
+const UserModel = require('../lib/userModel');
+
+async function setupDatabase() {
+  try {
+    console.log('🔧 Starting database setup...');
+    
+    // Test connection
+    console.log('📡 Testing database connection...');
+    const isConnected = await db.testConnection();
+    
+    if (!isConnected) {
+      console.error('❌ Database connection failed. Please check your configuration.');
+      process.exit(1);
+    }
+    
+    // Create tables
+    console.log('📋 Creating tables...');
+    await UserModel.createTable();
+    
+    console.log('✅ Database setup completed successfully!');
+    
+  } catch (error) {
+    console.error('❌ Database setup failed:', error);
+    process.exit(1);
+  }
+}
+
+// Run setup if script is executed directly
+if (require.main === module) {
+  setupDatabase();
+}
+
+module.exports = { setupDatabase };

@@ -1,0 +1,134 @@
+#!/usr/bin/env node
+/**
+ * Script to create a .env file with default environment variables
+ * Run with: npm run create-env
+ */
+
+const fs = require('fs');
+const path = require('path');
+
+const envPath = path.join(__dirname, '..', '.env');
+const envExamplePath = path.join(__dirname, '..', '.env.example');
+
+// Default environment variables
+const defaultEnvVars = {
+  // Server Configuration
+  NODE_ENV: 'development',
+  PORT: '3000',
+  HOST: 'localhost',
+  
+  // Database Configuration
+  DB_HOST: 'localhost',
+  DB_PORT: '5432',
+  DB_NAME: 'justfitness',
+  DB_USER: 'your_db_user',
+  DB_PASSWORD: 'your_db_password',
+  
+  // JWT Configuration
+  JWT_SECRET: 'your_super_secret_jwt_key_change_this_in_production',
+  JWT_EXPIRES_IN: '24h',
+  
+  // API Keys (if needed)
+  API_SECRET_KEY: 'your_api_secret_key',
+  
+  // CORS Configuration
+  CORS_ORIGIN: 'http://localhost:8081',
+  
+  // File Upload Configuration
+  MAX_FILE_SIZE: '10MB',
+  UPLOAD_PATH: './uploads',
+  
+  // Email Configuration (if needed)
+  EMAIL_SERVICE: 'gmail',
+  EMAIL_USER: 'your_email@gmail.com',
+  EMAIL_PASS: 'your_email_password'
+};
+
+function generateEnvContent(vars) {
+  let content = '# JustFitness Backend Environment Variables\n';
+  content += '# Generated on: ' + new Date().toISOString() + '\n\n';
+  
+  const categories = {
+    'Server Configuration': ['NODE_ENV', 'PORT', 'HOST'],
+    'Database Configuration': ['DB_HOST', 'DB_PORT', 'DB_NAME', 'DB_USER', 'DB_PASSWORD'],
+    'JWT Configuration': ['JWT_SECRET', 'JWT_EXPIRES_IN'],
+    'API Configuration': ['API_SECRET_KEY'],
+    'CORS Configuration': ['CORS_ORIGIN'],
+    'File Upload Configuration': ['MAX_FILE_SIZE', 'UPLOAD_PATH'],
+    'Email Configuration': ['EMAIL_SERVICE', 'EMAIL_USER', 'EMAIL_PASS']
+  };
+  
+  for (const [category, varNames] of Object.entries(categories)) {
+    content += `# ${category}\n`;
+    for (const varName of varNames) {
+      if (vars[varName] !== undefined) {
+        content += `${varName}=${vars[varName]}\n`;
+      }
+    }
+    content += '\n';
+  }
+  
+  return content;
+}
+
+function createEnvFile() {
+  try {
+    // Check if .env already exists
+    if (fs.existsSync(envPath)) {
+      console.log('⚠️  .env file already exists!');
+      console.log('Do you want to overwrite it? (y/N)');
+      
+      const readline = require('readline');
+      const rl = readline.createInterface({
+        input: process.stdin,
+        output: process.stdout
+      });
+      
+      rl.question('', (answer) => {
+        if (answer.toLowerCase() === 'y' || answer.toLowerCase() === 'yes') {
+          writeEnvFiles();
+        } else {
+          console.log('❌ Operation cancelled.');
+        }
+        rl.close();
+      });
+    } else {
+      writeEnvFiles();
+    }
+  } catch (error) {
+    console.error('❌ Error creating .env file:', error.message);
+    process.exit(1);
+  }
+}
+
+function writeEnvFiles() {
+  const envContent = generateEnvContent(defaultEnvVars);
+  
+  // Create .env file
+  fs.writeFileSync(envPath, envContent);
+  console.log('✅ .env file created successfully!');
+  
+  // Create .env.example file (without sensitive values)
+  const exampleVars = { ...defaultEnvVars };
+  exampleVars.JWT_SECRET = 'your_jwt_secret_here';
+  exampleVars.DB_PASSWORD = 'your_database_password';
+  exampleVars.API_SECRET_KEY = 'your_api_secret_key';
+  exampleVars.EMAIL_PASS = 'your_email_password';
+  
+  const exampleContent = generateEnvContent(exampleVars);
+  fs.writeFileSync(envExamplePath, exampleContent);
+  console.log('✅ .env.example file created successfully!');
+  
+  console.log('\n📝 Next steps:');
+  console.log('1. Update the values in .env with your actual configuration');
+  console.log('2. Make sure .env is added to your .gitignore file');
+  console.log('3. Share .env.example with your team for reference');
+  console.log('\n🔒 Security reminder: Never commit .env to version control!');
+}
+
+// Run the script
+if (require.main === module) {
+  createEnvFile();
+}
+
+module.exports = { createEnvFile, generateEnvContent, defaultEnvVars };
