@@ -87,4 +87,11 @@ function onListening() {
     ? 'pipe ' + addr
     : 'port ' + addr.port;
   debug('Listening on ' + bind);
+  
+  if (typeof addr === 'string') {
+    console.log('\n✓ Server running on pipe: ' + addr);
+  } else {
+    const host = addr.address === '::' ? 'localhost' : addr.address;
+    console.log('\n✓ Server running at http://' + host + ':' + addr.port);
+  }
 }

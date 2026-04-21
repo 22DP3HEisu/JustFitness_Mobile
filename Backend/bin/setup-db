@@ -7,6 +7,10 @@
 require('dotenv').config();
 const { db } = require('../lib/database');
 const UserModel = require('../lib/userModel');
+const MuscleGroupModel = require('../lib/muscleGroupModel');
+const ExerciseModel = require('../lib/exerciseModel');
+const WorkoutModel = require('../lib/workoutModel');
+const CompletedWorkoutModel = require('../lib/completedWorkoutModel');
 
 async function setupDatabase() {
   try {
@@ -21,9 +25,13 @@ async function setupDatabase() {
       process.exit(1);
     }
     
-    // Create tables
+    // Create tables (order matters due to foreign key dependencies)
     console.log('📋 Creating tables...');
     await UserModel.createTable();
+    await MuscleGroupModel.createTable();
+    await ExerciseModel.createTable();
+    await WorkoutModel.createTable();
+    await CompletedWorkoutModel.createTable();
     
     console.log('✅ Database setup completed successfully!');
     

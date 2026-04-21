@@ -6,10 +6,17 @@ const {
 const UserModel = require('../lib/userModel');
 const router = express.Router();
 
+router.get('/test', (req, res) => {
+  res.json({
+    success: true,
+    message: 'Auth routes are working!',
+  });
+});
+
 // Register route
 router.post('/register', async (req, res) => {
   try {
-    const { email, password, name, phone } = req.body;
+    const { email, password, name, gender, height, heightUnit, weight, weightUnit, goalWeight } = req.body;
 
     // Validate input
     const validation = AuthService.validateRegistration(email, password, name);
@@ -38,7 +45,12 @@ router.post('/register', async (req, res) => {
       email,
       password: hashedPassword,
       name,
-      phone
+      gender,
+      height,
+      heightUnit,
+      weight,
+      weightUnit,
+      goalWeight
     });
 
     // Generate tokens
@@ -185,6 +197,9 @@ router.post('/refresh', async (req, res) => {
       });
     }
 
+    // Extend refresh token expiration (sliding window)
+    AuthService.extendRefreshToken(refreshToken);
+
     // Generate new access token (keep same refresh token)
     const newAccessToken = AuthService.generateAccessToken(user.id, user.email);
 
@@ -207,11 +222,12 @@ router.post('/refresh', async (req, res) => {
   }
 });
 
-// Logout route - invalidate refresh token
-router.post('/logout', (req, res) => {
+// Logout route - requires valid access token
+router.post('/logout', authenticateToken, (req, res) => {
   try {
     const { refreshToken } = req.body;
 
+    // Remove refresh token if provided
     if (refreshToken) {
       const removed = AuthService.removeRefreshToken(refreshToken);
       if (removed) {
@@ -236,6 +252,7 @@ router.post('/logout', (req, res) => {
 // Logout from all devices
 router.post('/logout-all', authenticateToken, (req, res) => {
   try {
+    // Remove all refresh tokens for this user
     const removedCount = AuthService.removeAllUserRefreshTokens(req.user.userId);
 
     res.json({

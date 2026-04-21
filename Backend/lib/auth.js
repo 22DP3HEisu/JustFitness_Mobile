@@ -135,6 +135,17 @@ class AuthService {
     });
   }
 
+  // Extend refresh token expiration (sliding expiration)
+  static extendRefreshToken(refreshToken) {
+    const storedRefreshToken = refreshTokens.find(rt => rt.token === refreshToken);
+    if (storedRefreshToken) {
+      // Extend expiration by another 7 days from now
+      storedRefreshToken.expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+      return true;
+    }
+    return false;
+  }
+
   // Remove refresh token
   static removeRefreshToken(refreshToken) {
     const tokenIndex = refreshTokens.findIndex(rt => rt.token === refreshToken);

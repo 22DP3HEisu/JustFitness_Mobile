@@ -16,8 +16,12 @@ class UserModel {
         email VARCHAR(255) UNIQUE NOT NULL,
         password VARCHAR(255) NOT NULL,
         name VARCHAR(255) NOT NULL,
-        phone VARCHAR(50),
-        client_type VARCHAR(50),
+        gender VARCHAR(20),
+        height DECIMAL(5,2),
+        height_unit VARCHAR(5),
+        weight DECIMAL(5,2),
+        weight_unit VARCHAR(5),
+        goal_weight DECIMAL(5,2),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         last_login TIMESTAMP NULL,
         is_active BOOLEAN DEFAULT TRUE,
@@ -39,19 +43,23 @@ class UserModel {
    * Create a new user
    */
   static async create(userData) {
-    const { email, password, name, phone, clientType } = userData;
+    const { email, password, name, gender, height, heightUnit, weight, weightUnit, goalWeight } = userData;
     
     const sql = `
-      INSERT INTO users (email, password, name, phone, client_type)
-      VALUES (?, ?, ?, ?, ?)
+      INSERT INTO users (email, password, name, gender, height, height_unit, weight, weight_unit, goal_weight)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
     
     const params = [
       email.toLowerCase(),
       password,
       name,
-      phone || null,
-      clientType || 'unknown'
+      gender || null,
+      height || null,
+      heightUnit || null,
+      weight || null,
+      weightUnit || null,
+      goalWeight || null
     ];
     
     try {
@@ -71,7 +79,7 @@ class UserModel {
    */
   static async findByEmail(email) {
     const sql = `
-      SELECT id, email, password, name, phone, client_type, 
+      SELECT id, email, password, name, gender, height, height_unit, weight, weight_unit, goal_weight,
              created_at, last_login, is_active
       FROM users 
       WHERE email = ? AND is_active = TRUE
@@ -91,7 +99,7 @@ class UserModel {
    */
   static async findById(id) {
     const sql = `
-      SELECT id, email, name, phone, client_type, 
+      SELECT id, email, name, gender, height, height_unit, weight, weight_unit, goal_weight,
              created_at, last_login, is_active
       FROM users 
       WHERE id = ? AND is_active = TRUE
@@ -130,16 +138,16 @@ class UserModel {
    */
   static async findAll(limit = 100, offset = 0) {
     const sql = `
-      SELECT id, email, name, phone, client_type, 
+      SELECT id, email, name, gender, height, height_unit, weight, weight_unit, goal_weight,
              created_at, last_login, is_active
       FROM users 
       WHERE is_active = TRUE
       ORDER BY created_at DESC
-      LIMIT ? OFFSET ?
+      LIMIT ${parseInt(limit)} OFFSET ${parseInt(offset)}
     `;
     
     try {
-      const users = await db.selectAll(sql, [limit, offset]);
+      const users = await db.selectAll(sql, []);
       return users;
     } catch (error) {
       console.error('❌ Error finding all users:', error);
@@ -185,7 +193,7 @@ class UserModel {
    * Update user profile
    */
   static async updateProfile(userId, updates) {
-    const allowedFields = ['name', 'phone'];
+    const allowedFields = ['name', 'gender', 'height', 'height_unit', 'weight', 'weight_unit', 'goal_weight'];
     const updateFields = [];
     const params = [];
     
