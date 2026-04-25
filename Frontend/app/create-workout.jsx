@@ -1,14 +1,15 @@
 import { StyleSheet, Text, View, TextInput, TouchableOpacity, ScrollView, Alert, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native'
 import { StatusBar } from 'expo-status-bar'
 import { LinearGradient } from 'expo-linear-gradient'
-import { useRouter } from 'expo-router'
-import React, { useState } from 'react'
+import { useRouter, useLocalSearchParams } from 'expo-router'
+import React, { useState, useEffect } from 'react'
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons'
 import { useAuth } from './_context/AuthContext'
 import { useSelection } from './_context/SelectionContext'
 
 const CreateWorkoutScreen = () => {
   const router = useRouter()
+  const { workoutId } = useLocalSearchParams()
   const { authFetch } = useAuth()
   const { setSelectionCallback } = useSelection()
   
@@ -16,27 +17,71 @@ const CreateWorkoutScreen = () => {
   const [description, setDescription] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [focusedField, setFocusedField] = useState(null)
+  const [isLoadingExisting, setIsLoadingExisting] = useState(!!workoutId)
   
   // Exercises state - each exercise has an array of sets
   const [exercises, setExercises] = useState([])
+  const [originalExercises, setOriginalExercises] = useState([])
+
+  // Load existing workout data if editing
+  useEffect(() => {
+    if (workoutId) {
+      loadWorkoutData(workoutId)
+    }
+  }, [workoutId])
+
+  const loadWorkoutData = async (id) => {
+    try {
+      const { data } = await authFetch(`/api/workouts/${id}`)
+      if (data.success && data.data) {
+        const workout = data.data
+        setName(workout.name || '')
+        setDescription(workout.description || '')
+        
+        // Map existing exercises with their sets
+        if (workout.exercises && Array.isArray(workout.exercises)) {
+          const mappedExercises = workout.exercises.map(ex => ({
+            id: ex.exercise_id,
+            name: ex.exercise_name,
+            description: ex.exercise_description,
+            difficulty: ex.difficulty,
+            muscleGroups: ex.muscleGroups || [],
+            tempId: Date.now() + Math.random(),
+            sets: ex.sets && Array.isArray(ex.sets) ? ex.sets.map((s) => ({
+              id: s.id,
+              reps: String(s.reps || '10'),
+              weight: String(s.weight || '')
+            })) : [{ id: 1, reps: '10', weight: '' }]
+          }))
+          setExercises(mappedExercises)
+          setOriginalExercises(JSON.parse(JSON.stringify(mappedExercises)))
+        }
+      }
+    } catch (error) {
+      console.error('Error loading workout:', error)
+      Alert.alert('Error', 'Failed to load workout data')
+    } finally {
+      setIsLoadingExisting(false)
+    }
+  }
 
   const openExerciseSelection = () => {
     setSelectionCallback((selectedItems) => {
       if (selectedItems.length > 0) {
-        const newExercise = {
-          ...selectedItems[0],
-          tempId: Date.now(),
+        const newExercises = selectedItems.map(item => ({
+          ...item,
+          tempId: Date.now() + Math.random(),
           sets: [{ id: 1, reps: '10', weight: '' }], // Start with one empty set
-        }
-        setExercises(prev => [...prev, newExercise])
+        }))
+        setExercises(prev => [...prev, ...newExercises])
       }
     })
     router.push({
       pathname: '/select-items',
       params: {
         type: 'exercise',
-        mode: 'single',
-        title: 'Select Exercise',
+        mode: 'multi',
+        title: 'Select Exercises',
         selected: JSON.stringify([]),
         excluded: JSON.stringify(exercises.map(ex => ex.id)),
       }
@@ -97,50 +142,59 @@ const CreateWorkoutScreen = () => {
       return
     }
 
+    // Build exercises array once, used for both create and update
+    const exercisesPayload = exercises.flatMap((exercise) =>
+      exercise.sets.map((set, i) => ({
+        exerciseId: exercise.id,
+        setNumber: i + 1,
+        reps: parseInt(set.reps) || 0,
+        weight: set.weight ? parseFloat(set.weight) : null,
+        weightUnit: 'kg',
+      }))
+    )
+
     setIsLoading(true)
     try {
-      // First create the workout
-      const { data: workoutData } = await authFetch('/api/workouts', {
-        method: 'POST',
-        body: JSON.stringify({
-          name: name.trim(),
-          description: description.trim() || null,
-        }),
-      })
+      if (workoutId) {
+        // Update existing workout — send name, description, and all exercises in one request
+        const { data: updateData } = await authFetch(`/api/workouts/${workoutId}`, {
+          method: 'PUT',
+          body: JSON.stringify({
+            name: name.trim(),
+            description: description.trim() || null,
+            exercises: exercisesPayload,
+          }),
+        })
 
-      if (!workoutData.success) {
-        Alert.alert('Error', workoutData.message || 'Failed to create workout')
-        setIsLoading(false)
-        return
-      }
+        if (!updateData.success) {
+          Alert.alert('Error', updateData.message || 'Failed to update workout')
+          return
+        }
+      } else {
+        // Create new workout — send name, description, and all exercises in one request
+        const { data: workoutData } = await authFetch('/api/workouts', {
+          method: 'POST',
+          body: JSON.stringify({
+            name: name.trim(),
+            description: description.trim() || null,
+            exercises: exercisesPayload,
+          }),
+        })
 
-      const workoutId = workoutData.data.id
-
-      // Add all exercises with their sets to the workout
-      for (const exercise of exercises) {
-        for (let i = 0; i < exercise.sets.length; i++) {
-          const set = exercise.sets[i]
-          await authFetch(`/api/workouts/${workoutId}/exercises`, {
-            method: 'POST',
-            body: JSON.stringify({
-              exerciseId: exercise.id,
-              setNumber: i + 1,
-              reps: parseInt(set.reps) || 0,
-              weight: set.weight ? parseFloat(set.weight) : null,
-              weightUnit: 'kg',
-            }),
-          })
+        if (!workoutData.success) {
+          Alert.alert('Error', workoutData.message || 'Failed to create workout')
+          return
         }
       }
 
       Alert.alert(
         'Success',
-        'Workout created successfully!',
+        workoutId ? 'Workout updated successfully!' : 'Workout created successfully!',
         [{ text: 'OK', onPress: () => router.back() }]
       )
     } catch (error) {
-      console.error('Error creating workout:', error)
-      Alert.alert('Error', error.message || 'Failed to create workout')
+      console.error('Error saving workout:', error)
+      Alert.alert('Error', error.message || 'Failed to save workout')
     } finally {
       setIsLoading(false)
     }
@@ -240,10 +294,16 @@ const CreateWorkoutScreen = () => {
           <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
             <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Create Workout</Text>
+          <Text style={styles.headerTitle}>{workoutId ? 'Edit Workout' : 'Create Workout'}</Text>
           <View style={styles.placeholder} />
         </View>
 
+        {isLoadingExisting ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#F5C842" />
+            <Text style={styles.loadingText}>Loading workout...</Text>
+          </View>
+        ) : (
         <KeyboardAvoidingView 
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={styles.keyboardView}
@@ -317,7 +377,7 @@ const CreateWorkoutScreen = () => {
               )}
             </View>
 
-            {/* Create Button */}
+            {/* Create/Update Button */}
             <TouchableOpacity
               style={[styles.createButton, isLoading && styles.createButtonDisabled]}
               onPress={handleCreate}
@@ -328,7 +388,9 @@ const CreateWorkoutScreen = () => {
               ) : (
                 <>
                   <Ionicons name="checkmark-circle" size={24} color="#2C3E50" />
-                  <Text style={styles.createButtonText}>Create Workout</Text>
+                  <Text style={styles.createButtonText}>
+                    {workoutId ? 'Save Changes' : 'Create Workout'}
+                  </Text>
                 </>
               )}
             </TouchableOpacity>
@@ -336,6 +398,7 @@ const CreateWorkoutScreen = () => {
             <View style={styles.bottomPadding} />
           </ScrollView>
         </KeyboardAvoidingView>
+        )}
       </LinearGradient>
     </View>
   )
@@ -597,6 +660,17 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#2C3E50',
+  },
+  loadingContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingBottom: 100,
+  },
+  loadingText: {
+    fontSize: 16,
+    color: '#FFFFFF',
+    marginTop: 16,
   },
   bottomPadding: {
     height: 40,

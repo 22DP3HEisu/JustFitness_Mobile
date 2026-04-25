@@ -19,6 +19,7 @@ const ITEM_TYPE_CONFIG = {
     emptyText: 'No exercises available',
     createRoute: '/create-exercise',
     createLabel: 'Create New Exercise',
+    supportsQuantity: false,
     renderSubtext: (item) => {
       if (item.muscleGroups && item.muscleGroups.length > 0) {
         return item.muscleGroups.map(mg => mg.name).join(', ')
@@ -34,6 +35,7 @@ const ITEM_TYPE_CONFIG = {
     emptyText: 'No muscle groups available',
     createRoute: null,
     createLabel: null,
+    supportsQuantity: false,
     renderSubtext: null
   },
   workout: {
@@ -44,9 +46,33 @@ const ITEM_TYPE_CONFIG = {
     emptyText: 'No workouts available',
     createRoute: '/create-workout',
     createLabel: 'Create New Workout',
+    supportsQuantity: false,
     renderSubtext: (item) => {
       if (item.exerciseCount !== undefined) {
         return `${item.exerciseCount} exercises`
+      }
+      return null
+    }
+  },
+  food: {
+    endpoint: '/api/foods',
+    defaultTitle: 'Select Food',
+    icon: (color = "#F5C842") => (
+      <MaterialCommunityIcons name="food-apple" size={20} color={color} />
+    ),
+    searchPlaceholder: 'Search foods...',
+    emptyText: 'No foods available',
+    createRoute: '/create-food',
+    createLabel: 'Create New Food',
+    supportsQuantity: true,
+    quantityUnit: 'g',
+    defaultQuantity: 100,
+    renderSubtext: (item) => {
+      if (item.calories_per_100g !== undefined) {
+        return `${item.calories_per_100g} kcal / 100g`
+      }
+      if (item.calories !== undefined) {
+        return `${item.calories} kcal`
       }
       return null
     }
@@ -72,7 +98,10 @@ const SelectItemsScreen = () => {
   const [items, setItems] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
+  
+  // For types with quantity: store as { id, quantity }, otherwise just IDs
   const [selectedIds, setSelectedIds] = useState(initialSelected)
+  const [quantities, setQuantities] = useState({}) // { [itemId]: quantity }
 
   // Fetch items when screen gains focus (including after creating new item)
   useFocusEffect(
@@ -90,6 +119,7 @@ const SelectItemsScreen = () => {
       }
     } catch (error) {
       console.error(`Error fetching ${type}s:`, error)
+      console.error('Response error details:', error.response ? error.response.data : 'No response data')
     } finally {
       setIsLoading(false)
     }
@@ -98,18 +128,54 @@ const SelectItemsScreen = () => {
   const handleSelect = (item) => {
     if (mode === 'single') {
       setSelectedIds([item.id])
+      if (typeConfig.supportsQuantity) {
+        setQuantities({ [item.id]: typeConfig.defaultQuantity })
+      }
     } else {
       if (selectedIds.includes(item.id)) {
         setSelectedIds(prev => prev.filter(id => id !== item.id))
+        if (typeConfig.supportsQuantity) {
+          setQuantities(prev => {
+            const updated = { ...prev }
+            delete updated[item.id]
+            return updated
+          })
+        }
       } else {
         setSelectedIds(prev => [...prev, item.id])
+        if (typeConfig.supportsQuantity) {
+          setQuantities(prev => ({
+            ...prev,
+            [item.id]: typeConfig.defaultQuantity
+          }))
+        }
       }
     }
   }
 
+  const handleQuantityChange = (itemId, value) => {
+    const numValue = parseInt(value) || 0
+    setQuantities(prev => ({
+      ...prev,
+      [itemId]: Math.max(0, numValue)
+    }))
+  }
+
   const handleConfirm = () => {
-    const selectedItems = items.filter(item => selectedIds.includes(item.id))
-    confirmSelection(selectedItems)
+    if (typeConfig.supportsQuantity) {
+      // Return items with quantities
+      const selectedItems = items
+        .filter(item => selectedIds.includes(item.id))
+        .map(item => ({
+          ...item,
+          quantity: quantities[item.id] || typeConfig.defaultQuantity
+        }))
+      confirmSelection(selectedItems)
+    } else {
+      // Return items without quantities
+      const selectedItems = items.filter(item => selectedIds.includes(item.id))
+      confirmSelection(selectedItems)
+    }
     router.back()
   }
 
@@ -135,36 +201,78 @@ const SelectItemsScreen = () => {
   const renderItem = ({ item }) => {
     const isSelected = selectedIds.includes(item.id)
     const subtext = typeConfig.renderSubtext?.(item)
+    const quantity = quantities[item.id] || typeConfig.defaultQuantity
     
     return (
-      <TouchableOpacity
-        style={[styles.itemOption, isSelected && styles.itemOptionSelected]}
-        onPress={() => handleSelect(item)}
-      >
-        {typeConfig.icon()}
-        <View style={styles.itemInfo}>
-          <Text style={[styles.itemName, isSelected && styles.itemNameSelected]}>
-            {item.name}
-          </Text>
-          {item.description && (
-            <Text style={styles.itemDescription} numberOfLines={1}>
-              {item.description}
+      <View>
+        <TouchableOpacity
+          style={[styles.itemOption, isSelected && styles.itemOptionSelected]}
+          onPress={() => handleSelect(item)}
+        >
+          {typeConfig.icon()}
+          <View style={styles.itemInfo}>
+            <Text style={[styles.itemName, isSelected && styles.itemNameSelected]}>
+              {item.name}
             </Text>
-          )}
-          {subtext && (
-            <Text style={styles.itemSubtext}>{subtext}</Text>
-          )}
-        </View>
-        {mode === 'single' ? (
-          <View style={[styles.radio, isSelected && styles.radioSelected]}>
-            {isSelected && <View style={styles.radioInner} />}
+            {item.description && (
+              <Text style={styles.itemDescription} numberOfLines={1}>
+                {item.description}
+              </Text>
+            )}
+            {subtext && (
+              <Text style={styles.itemSubtext}>{subtext}</Text>
+            )}
           </View>
-        ) : (
-          <View style={[styles.checkbox, isSelected && styles.checkboxSelected]}>
-            {isSelected && <Ionicons name="checkmark" size={14} color="#2C3E50" />}
+          {mode === 'single' ? (
+            <View style={[styles.radio, isSelected && styles.radioSelected]}>
+              {isSelected && <View style={styles.radioInner} />}
+            </View>
+          ) : (
+            <View style={[styles.checkbox, isSelected && styles.checkboxSelected]}>
+              {isSelected && <Ionicons name="checkmark" size={14} color="#2C3E50" />}
+            </View>
+          )}
+        </TouchableOpacity>
+        
+        {/* Quantity input - only show for selected items with quantity support */}
+        {isSelected && typeConfig.supportsQuantity && (
+          <View style={styles.quantityContainer}>
+            <Text style={styles.quantityLabel}>Portion:</Text>
+            <View style={styles.quantityInputWrapper}>
+              <TouchableOpacity 
+                style={styles.quantityButton}
+                onPress={() => handleQuantityChange(item.id, quantity - 10)}
+              >
+                <Ionicons name="remove" size={18} color="#F5C842" />
+              </TouchableOpacity>
+              
+              <TextInput
+                style={styles.quantityInput}
+                value={quantity.toString()}
+                onChangeText={(value) => handleQuantityChange(item.id, value)}
+                keyboardType="numeric"
+                selectTextOnFocus
+              />
+              
+              <Text style={styles.quantityUnit}>{typeConfig.quantityUnit}</Text>
+              
+              <TouchableOpacity 
+                style={styles.quantityButton}
+                onPress={() => handleQuantityChange(item.id, quantity + 10)}
+              >
+                <Ionicons name="add" size={18} color="#F5C842" />
+              </TouchableOpacity>
+            </View>
+            
+            {/* Show calculated calories if available */}
+            {item.calories_per_100g && (
+              <Text style={styles.calculatedCalories}>
+                ≈ {Math.round(item.calories_per_100g * quantity / 100)} kcal
+              </Text>
+            )}
           </View>
         )}
-      </TouchableOpacity>
+      </View>
     )
   }
 
@@ -323,7 +431,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.08)',
     borderRadius: 12,
     padding: 14,
-    marginBottom: 10,
+    marginBottom: 8,
     gap: 12,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.1)',
@@ -331,6 +439,9 @@ const styles = StyleSheet.create({
   itemOptionSelected: {
     backgroundColor: 'rgba(245, 200, 66, 0.15)',
     borderColor: '#F5C842',
+    borderBottomLeftRadius: 0,
+    borderBottomRightRadius: 0,
+    marginBottom: 0,
   },
   itemInfo: {
     flex: 1,
@@ -407,5 +518,53 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '500',
     color: '#F5C842',
+  },
+  quantityContainer: {
+    backgroundColor: 'rgba(245, 200, 66, 0.08)',
+    borderWidth: 1,
+    borderColor: '#F5C842',
+    borderTopWidth: 0,
+    borderBottomLeftRadius: 12,
+    borderBottomRightRadius: 12,
+    padding: 12,
+    marginBottom: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  quantityLabel: {
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.7)',
+    fontWeight: '500',
+  },
+  quantityInputWrapper: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    gap: 8,
+  },
+  quantityButton: {
+    padding: 6,
+  },
+  quantityInput: {
+    flex: 1,
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    textAlign: 'center',
+    paddingVertical: 8,
+  },
+  quantityUnit: {
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.6)',
+    fontWeight: '500',
+  },
+  calculatedCalories: {
+    fontSize: 13,
+    color: '#F5C842',
+    fontWeight: '600',
   },
 })

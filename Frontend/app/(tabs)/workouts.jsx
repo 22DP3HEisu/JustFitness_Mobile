@@ -76,7 +76,10 @@ const WorkoutsScreen = () => {
               <Text style={styles.workoutDate}>{formatDate(item.workout_date)}</Text>
             </View>
           </View>
-          <TouchableOpacity>
+          <TouchableOpacity onPress={() => router.push({
+            pathname: '/create-workout',
+            params: { workoutId: item.id }
+          })}>
             <Ionicons name="create-outline" size={24} color="#F5C842" />
           </TouchableOpacity>
         </View>
@@ -86,15 +89,15 @@ const WorkoutsScreen = () => {
             <Text style={styles.statValue}>{exerciseCount}</Text>
             <Text style={styles.statLabel}>EXERCISES</Text>
           </View>
-          <View style={styles.statItem}>
+          {/* <View style={styles.statItem}>
             <Text style={styles.statValue}>{totalSets}x</Text>
             <Text style={styles.statLabel}>SETS</Text>
-          </View>
-          <View style={styles.statItem}>
+          </View> */}
+          {/* <View style={styles.statItem}>
             <Ionicons name="time" size={16} color="#FFFFFF" />
             <Text style={styles.statValue}>{item.duration || '-'}</Text>
             <Text style={styles.statLabel}>min</Text>
-          </View>
+          </View> */}
         </View>
 
         {item.description && (
@@ -123,7 +126,7 @@ const WorkoutsScreen = () => {
       >
         <ScrollView showsVerticalScrollIndicator={false} style={styles.content}>
           {/* AI Trainer Section */}
-          <View style={styles.aiSection}>
+          {/* <View style={styles.aiSection}>
             <View>
               <Text style={styles.aiTitle}>AI Trainer</Text>
               <Text style={styles.aiSubtitle}>Let AI generate workouts for you!</Text>
@@ -131,7 +134,7 @@ const WorkoutsScreen = () => {
             <TouchableOpacity style={styles.generateButton}>
               <Text style={styles.generateButtonText}>Generate</Text>
             </TouchableOpacity>
-          </View>
+          </View> */}
 
           {/* Tabs */}
           <View style={styles.tabsContainer}>
@@ -185,13 +188,13 @@ const WorkoutsScreen = () => {
           <View style={styles.workoutHeaderStats}>
             <View style={[styles.statItem, { alignItems: 'center' }]}>
               <Ionicons name="fitness" size={24} color="#F5C842" />
-              <Text style={[styles.statValue, { marginLeft: 8 }]}>{workoutsList.length}</Text>
+              <Text style={[styles.statValue]}>{workoutsList.length}</Text>
               <Text style={styles.statLabel}>Workouts</Text>
             </View>
-            <Text style={styles.thisWeekText}>Total</Text>
+            {/* <Text style={styles.thisWeekText}>Total</Text>
             <TouchableOpacity onPress={fetchWorkouts} style={styles.refreshButton}>
               <Ionicons name="refresh" size={20} color="#F5C842" />
-            </TouchableOpacity>
+            </TouchableOpacity> */}
           </View>
 
           {/* Workouts List */}

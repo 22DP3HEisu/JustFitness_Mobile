@@ -6,11 +6,13 @@
 
 require('dotenv').config();
 const { db } = require('../lib/database');
-const UserModel = require('../lib/userModel');
-const MuscleGroupModel = require('../lib/muscleGroupModel');
-const ExerciseModel = require('../lib/exerciseModel');
-const WorkoutModel = require('../lib/workoutModel');
-const CompletedWorkoutModel = require('../lib/completedWorkoutModel');
+const UserModel = require('../lib/DbModels/userModel');
+const MuscleGroupModel = require('../lib/DbModels/muscleGroupModel');
+const ExerciseModel = require('../lib/DbModels/exerciseModel');
+const WorkoutModel = require('../lib/DbModels/workoutModel');
+const CompletedWorkoutModel = require('../lib/DbModels/completedWorkoutModel');
+const MealModel = require('../lib/DbModels/mealModel');
+const FoodModel = require('../lib/DbModels/foodModel');
 
 async function setupDatabase() {
   try {
@@ -32,6 +34,8 @@ async function setupDatabase() {
     await ExerciseModel.createTable();
     await WorkoutModel.createTable();
     await CompletedWorkoutModel.createTable();
+    await FoodModel.createTable();
+    await MealModel.createTable();
     
     console.log('✅ Database setup completed successfully!');
     

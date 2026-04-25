@@ -1,4 +1,4 @@
-const { db } = require('./database');
+const { db } = require('../database');
 
 /**
  * Completed Workout model for tracking workout history

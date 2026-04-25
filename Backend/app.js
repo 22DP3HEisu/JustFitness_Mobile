@@ -11,6 +11,8 @@ var auth = require('./routes/auth');
 var exercises = require('./routes/exercises');
 var workouts = require('./routes/workouts');
 var muscleGroups = require('./routes/muscleGroups');
+var meals = require('./routes/meals');
+var foods = require('./routes/foods');
 
 var app = express();
 
@@ -39,6 +41,8 @@ app.use('/auth', auth);
 app.use('/api/exercises', exercises);
 app.use('/api/workouts', workouts);
 app.use('/api/muscle-groups', muscleGroups);
+app.use('/api/meals', meals);
+app.use('/api/foods', foods);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

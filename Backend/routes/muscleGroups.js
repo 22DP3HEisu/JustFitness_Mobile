@@ -1,6 +1,6 @@
 const express = require('express');
 const { authenticateToken } = require('../lib/auth');
-const MuscleGroupModel = require('../lib/muscleGroupModel');
+const MuscleGroupModel = require('../lib/DbModels/muscleGroupModel');
 const router = express.Router();
 
 /**

@@ -1,4 +1,4 @@
-const { db } = require('./database');
+const { db } = require('../database');
 
 /**
  * Workout model for database operations
@@ -227,6 +227,38 @@ class WorkoutModel {
   }
 
   /**
+ * Pievienot vairākus vingrinājumu setus vienā DB pieprasījumā
+ */
+static async addExercisesBulk(workoutId, exercises) {
+  if (!exercises || exercises.length === 0) return;
+
+  // Veidojam vērtību placeholderus katram setam: (?, ?, ?, ?, ?, ?)
+  const placeholders = exercises.map(() => '(?, ?, ?, ?, ?, ?)').join(', ');
+
+  const sql = `
+    INSERT INTO workout_exercises (workout_id, exercise_id, set_number, reps, weight, weight_unit)
+    VALUES ${placeholders}
+  `;
+
+  // Saplacam visus parametrus vienā masīvā
+  const params = exercises.flatMap(({ exerciseId, setNumber, reps, weight, weightUnit }) => [
+    workoutId,
+    exerciseId,
+    setNumber,
+    reps ?? 0,
+    weight ?? null,
+    weightUnit ?? 'kg',
+  ]);
+
+  try {
+    await db.insert(sql, params);
+  } catch (error) {
+    console.error('❌ Kļūda pievienojot vingrinājumus:', error);
+    throw error;
+  }
+}
+
+  /**
    * Update a set in workout
    */
   static async updateExercise(workoutExerciseId, reps, weight, weightUnit, duration, restDuration, notes) {
@@ -256,6 +288,20 @@ class WorkoutModel {
       return rowsAffected > 0;
     } catch (error) {
       console.error('❌ Error removing exercise from workout:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Dzēšam visus vingrinājumus dotajam treniņam
+   */
+  static async removeAllExercises(workoutId) {
+    const sql = `DELETE FROM workout_exercises WHERE workout_id = ?`;
+
+    try {
+      await db.update(sql, [workoutId]);
+    } catch (error) {
+      console.error('❌ Kļūda dzēšot vingrinājumus:', error);
       throw error;
     }
   }

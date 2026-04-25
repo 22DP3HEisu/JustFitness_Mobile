@@ -82,6 +82,13 @@ export default function RootLayout() {
                     }} 
                 />
                 <Stack.Screen 
+                    name="create-food" 
+                    options={{ 
+                        presentation: 'fullScreenModal',
+                        gestureEnabled: true,
+                    }} 
+                />
+                <Stack.Screen 
                     name="select-items" 
                     options={{ 
                         presentation: 'fullScreenModal',

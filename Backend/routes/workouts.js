@@ -1,7 +1,7 @@
 const express = require('express');
 const { authenticateToken } = require('../lib/auth');
-const WorkoutModel = require('../lib/workoutModel');
-const CompletedWorkoutModel = require('../lib/completedWorkoutModel');
+const WorkoutModel = require('../lib/DbModels/workoutModel');
+const CompletedWorkoutModel = require('../lib/DbModels/completedWorkoutModel');
 const router = express.Router();
 
 /**
@@ -75,9 +75,9 @@ router.get('/:id', authenticateToken, async (req, res) => {
 router.post('/', authenticateToken, async (req, res) => {
   try {
     const userId = req.user.userId;
-    const { name, description, workoutDate } = req.body;
+    const { name, description, workoutDate, exercises } = req.body;
 
-    // Validate required fields
+    // Pārbaudām vai treniņa nosaukums ir ievadīts
     if (!name || name.trim().length === 0) {
       return res.status(400).json({
         success: false,
@@ -85,13 +85,19 @@ router.post('/', authenticateToken, async (req, res) => {
       });
     }
 
-    // Create workout
+    // Izveidojam treniņu
     const workout = await WorkoutModel.create(
       userId,
       name.trim(),
       description || null,
       workoutDate || null
     );
+
+    // Ja vingrinājumi ir padoti, pievienojam tos vienā reizē
+    if (exercises && exercises.length > 0) {
+      await WorkoutModel.addExercisesBulk(workout.id, exercises);
+      workout.exercises = await WorkoutModel.getExercises(workout.id);
+    }
 
     res.status(201).json({
       success: true,
@@ -116,9 +122,9 @@ router.put('/:id', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user.userId;
-    const { name, description, duration, caloriesBurned } = req.body;
+    const { name, description, duration, caloriesBurned, exercises } = req.body;
 
-    // Check if workout exists
+    // Pārbaudām vai treniņš eksistē
     const workout = await WorkoutModel.findById(id);
     if (!workout) {
       return res.status(404).json({
@@ -127,7 +133,7 @@ router.put('/:id', authenticateToken, async (req, res) => {
       });
     }
 
-    // Check if workout belongs to the authenticated user
+    // Pārbaudām vai treniņš pieder autentificētajam lietotājam
     if (workout.user_id !== userId) {
       return res.status(403).json({
         success: false,
@@ -135,27 +141,34 @@ router.put('/:id', authenticateToken, async (req, res) => {
       });
     }
 
-    // Update workout
-    const updated = await WorkoutModel.update(id, {
-      name: name !== undefined ? name : workout.name,
-      description: description !== undefined ? description : workout.description,
-      duration: duration !== undefined ? duration : workout.duration,
-      calories_burned: caloriesBurned !== undefined ? caloriesBurned : workout.calories_burned
-    });
+    // Atjauninām treniņa pamata informāciju
+    const updated = await WorkoutModel.update(
+      id,
+      name !== undefined ? name : workout.name,
+      description !== undefined ? description : workout.description,
+      duration !== undefined ? duration : workout.duration,
+      caloriesBurned !== undefined ? caloriesBurned : workout.calories_burned
+    );
 
-    if (updated) {
-      const updatedWorkout = await WorkoutModel.findById(id);
-      res.json({
-        success: true,
-        message: 'Workout updated successfully',
-        data: updatedWorkout
-      });
-    } else {
-      res.status(500).json({
+    if (!updated) {
+      return res.status(500).json({
         success: false,
         message: 'Failed to update workout'
       });
     }
+
+    // Ja vingrinājumi ir padoti, dzēšam vecos un pievienojam jaunos vienā reizē
+    if (exercises && exercises.length > 0) {
+      await WorkoutModel.removeAllExercises(id);
+      await WorkoutModel.addExercisesBulk(id, exercises);
+    }
+
+    const updatedWorkout = await WorkoutModel.findById(id);
+    res.json({
+      success: true,
+      message: 'Workout updated successfully',
+      data: updatedWorkout
+    });
   } catch (error) {
     console.error('Error updating workout:', error);
     res.status(500).json({
@@ -343,8 +356,56 @@ router.put('/:workoutId/exercises/:exerciseId', authenticateToken, async (req, r
 });
 
 /**
+ * DELETE /api/workouts/:workoutId/exercises/set/:setId
+ * Remove a specific set from a workout exercise (MUST COME BEFORE /:exerciseId route)
+ */
+router.delete('/:workoutId/exercises/set/:setId', authenticateToken, async (req, res) => {
+  try {
+    const { workoutId, setId } = req.params;
+    const userId = req.user.userId;
+
+    // Check if workout exists and belongs to user
+    const workout = await WorkoutModel.findById(workoutId);
+    if (!workout) {
+      return res.status(404).json({
+        success: false,
+        message: 'Workout not found'
+      });
+    }
+
+    if (workout.user_id !== userId) {
+      return res.status(403).json({
+        success: false,
+        message: 'You do not have permission to modify this workout'
+      });
+    }
+
+    // Remove exercise set from workout
+    const removed = await WorkoutModel.removeExercise(setId);
+    if (removed) {
+      res.json({
+        success: true,
+        message: 'Exercise set removed successfully'
+      });
+    } else {
+      res.status(404).json({
+        success: false,
+        message: 'Exercise set not found'
+      });
+    }
+  } catch (error) {
+    console.error('Error removing exercise set from workout:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to remove exercise set',
+      error: error.message
+    });
+  }
+});
+
+/**
  * DELETE /api/workouts/:workoutId/exercises/:exerciseId
- * Remove an exercise from a workout
+ * Remove all sets of an exercise from a workout
  */
 router.delete('/:workoutId/exercises/:exerciseId', authenticateToken, async (req, res) => {
   try {
@@ -367,21 +428,26 @@ router.delete('/:workoutId/exercises/:exerciseId', authenticateToken, async (req
       });
     }
 
-    // Remove exercise from workout
-    const removed = await WorkoutModel.removeExercise(workoutId, exerciseId);
-    if (removed) {
-      const updatedWorkout = await WorkoutModel.findById(workoutId);
-      res.json({
-        success: true,
-        message: 'Exercise removed from workout successfully',
-        data: updatedWorkout
-      });
-    } else {
-      res.status(404).json({
+    // Get all sets for this exercise and remove them
+    const exerciseData = workout.exercises.find(ex => ex.exercise_id === parseInt(exerciseId));
+    if (!exerciseData) {
+      return res.status(404).json({
         success: false,
         message: 'Exercise not found in this workout'
       });
     }
+
+    // Delete all sets for this exercise
+    for (const set of exerciseData.sets) {
+      await WorkoutModel.removeExercise(set.id);
+    }
+
+    const updatedWorkout = await WorkoutModel.findById(workoutId);
+    res.json({
+      success: true,
+      message: 'Exercise removed from workout successfully',
+      data: updatedWorkout
+    });
   } catch (error) {
     console.error('Error removing exercise from workout:', error);
     res.status(500).json({
@@ -391,6 +457,7 @@ router.delete('/:workoutId/exercises/:exerciseId', authenticateToken, async (req
     });
   }
 });
+
 
 // ==================== COMPLETED WORKOUTS ROUTES ====================
 

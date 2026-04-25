@@ -3,7 +3,7 @@ const {
   AuthService, 
   authenticateToken 
 } = require('../lib/auth');
-const UserModel = require('../lib/userModel');
+const UserModel = require('../lib/DbModels/userModel');
 const router = express.Router();
 
 router.get('/test', (req, res) => {
