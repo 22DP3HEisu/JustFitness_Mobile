@@ -1,8 +1,17 @@
 const { db } = require('../database');
 
+/**
+ * Mājiine (Meal) model for database operations
+ * Izseko lietotāja ēdienus un uzņemātus pārtikas produktus
+ */
 class MealModel {
-
+    static tableName = 'meals';
+    
+    /**
+     * Izveido ēdienus un ēdien-pārtikas saites tabulas
+     */
     static async createTable() {
+        // Izveido galveno \u0113dienum tabulu
         const createMealsTableSQL = `
         CREATE TABLE IF NOT EXISTS meals (
             id INT AUTO_INCREMENT PRIMARY KEY,
@@ -16,6 +25,7 @@ class MealModel {
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         `;
 
+        // Izveido saites tabulu starp \u0113dienima un p\u0101rtikas produktiem
         const createLinkTableSQL = `
         CREATE TABLE IF NOT EXISTS meal_foods (
             id INT AUTO_INCREMENT PRIMARY KEY,
@@ -45,6 +55,9 @@ class MealModel {
         }
     }
 
+    /**
+     * Izveido jaunu ēdienu
+     */
     static async createMeal(userId, name, mealDate) {
         const date = mealDate || new Date().toISOString().split('T')[0];
         const sql = `
@@ -62,6 +75,9 @@ class MealModel {
         }
     }
 
+    /**
+     * Atrod ēdienu pēc ID ar tā pārtikas produktiem
+     */
     static async findById(id) {
         const sql = `
         SELECT m.id, m.user_id, m.name, m.meal_date, m.created_at, m.updated_at
@@ -81,7 +97,9 @@ class MealModel {
         }
     }
 
-    // Atrod visas lietotāja ēdienreizes tieši tajā dienā, kā arī katrai ēdienreizei pievieno tās pārtikas produktus
+    /**
+     * Atrod visus lietotāja ēdienus tieši tajā dienā, ar uzņemātiem produktiem
+     */
     static async findByUserId(userId) {
         const sql = `
         SELECT m.id, m.user_id, m.name, m.meal_date, m.created_at, m.updated_at
@@ -103,6 +121,9 @@ class MealModel {
         }
     }
 
+    /**
+     * Iegūst pārtikas produktus konkrētam ēdienum
+     */
     static async getFoods(mealId) {
         const sql = `
         SELECT mf.id, mf.food_id, f.name, f.calories_per_100g, f.protein_per_100g, f.carbs_per_100g, f.fat_per_100g,
@@ -121,6 +142,9 @@ class MealModel {
         }
     }
 
+    /**
+     * Pievieno pārtikas produktu ēdienam
+     */
     static async addFood(mealId, foodId, quantity, unit) {
         const sql = `
         INSERT INTO meal_foods (meal_id, food_id, quantity, unit)
@@ -137,6 +161,9 @@ class MealModel {
         }
     }
 
+    /**
+     * Noņem pārtikas produktu no ēdiena
+     */
     static async removeFood(id) {
         const sql = `
         DELETE FROM meal_foods
@@ -144,7 +171,7 @@ class MealModel {
         `;
 
         try {
-            await db.executeQuery(sql, [mealId, foodId]);
+            await db.executeQuery(sql, [id]);
             return true;
         } catch (error) {
             console.error('❌ Error removing food from meal:', error);

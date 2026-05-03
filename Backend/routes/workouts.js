@@ -1,8 +1,67 @@
 const express = require('express');
 const { authenticateToken } = require('../lib/auth');
 const WorkoutModel = require('../lib/DbModels/workoutModel');
-const CompletedWorkoutModel = require('../lib/DbModels/completedWorkoutModel');
+const WorkoutExerciseModel = require('../lib/DbModels/workoutExerciseModel');
+const workoutLogModel = require('../lib/DbModels/workoutLogModel');
+const ExerciseLogModel = require('../lib/DbModels/exerciseLogModel');
+const SetLogModel = require('../lib/DbModels/SetLogModel');
+const ExerciseModel = require('../lib/DbModels/exerciseModel');
 const router = express.Router();
+
+const ownsSession = (session, userId) => Number(session?.user_id) === Number(userId);
+const parseLogInt = (value, fallback = 0) => {
+  const parsed = parseInt(value, 10);
+  return Number.isFinite(parsed) ? parsed : fallback;
+};
+const parseLogFloat = (value) => {
+  if (value === undefined || value === null || value === '') return null;
+
+  const parsed = parseFloat(value);
+  return Number.isFinite(parsed) ? parsed : null;
+};
+
+const buildWorkoutSessionPayload = async (session) => {
+  const workoutDetails = await WorkoutModel.findById(session.workout_id);
+  const exerciseLogs = await ExerciseLogModel.findByWorkoutLogId(session.id);
+
+  for (const exerciseLog of exerciseLogs) {
+    exerciseLog.sets = await SetLogModel.findByExerciseLogId(exerciseLog.id);
+  }
+
+  return {
+    ...session,
+    workout: workoutDetails,
+    exerciseLogs
+  };
+};
+
+const findOwnedExerciseLog = async (exerciseLogId, userId) => {
+  const exerciseLog = await ExerciseLogModel.findById(exerciseLogId);
+  if (!exerciseLog) {
+    return { status: 404, message: 'Session exercise not found' };
+  }
+
+  const session = await workoutLogModel.findById(exerciseLog.workout_log_id);
+  if (!ownsSession(session, userId)) {
+    return { status: 403, message: 'You do not have permission to edit this session exercise' };
+  }
+
+  return { exerciseLog, session };
+};
+
+const findOwnedSetLog = async (setLogId, userId) => {
+  const setLog = await SetLogModel.findById(setLogId);
+  if (!setLog) {
+    return { status: 404, message: 'Session set not found' };
+  }
+
+  const ownedExerciseLog = await findOwnedExerciseLog(setLog.exercise_log_id, userId);
+  if (ownedExerciseLog.status) {
+    return ownedExerciseLog;
+  }
+
+  return { setLog, exerciseLog: ownedExerciseLog.exerciseLog, session: ownedExerciseLog.session };
+};
 
 /**
  * GET /api/workouts
@@ -75,7 +134,7 @@ router.get('/:id', authenticateToken, async (req, res) => {
 router.post('/', authenticateToken, async (req, res) => {
   try {
     const userId = req.user.userId;
-    const { name, description, workoutDate, exercises } = req.body;
+    const { name, description, exercises } = req.body;
 
     // Pārbaudām vai treniņa nosaukums ir ievadīts
     if (!name || name.trim().length === 0) {
@@ -90,13 +149,11 @@ router.post('/', authenticateToken, async (req, res) => {
       userId,
       name.trim(),
       description || null,
-      workoutDate || null
     );
 
     // Ja vingrinājumi ir padoti, pievienojam tos vienā reizē
-    if (exercises && exercises.length > 0) {
-      await WorkoutModel.addExercisesBulk(workout.id, exercises);
-      workout.exercises = await WorkoutModel.getExercises(workout.id);
+    if (exercises?.length > 0) {
+      await WorkoutExerciseModel.addMultiple(workout.id, exercises);
     }
 
     res.status(201).json({
@@ -122,7 +179,7 @@ router.put('/:id', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user.userId;
-    const { name, description, duration, caloriesBurned, exercises } = req.body;
+    const { name, description, exercises } = req.body;
 
     // Pārbaudām vai treniņš eksistē
     const workout = await WorkoutModel.findById(id);
@@ -141,26 +198,24 @@ router.put('/:id', authenticateToken, async (req, res) => {
       });
     }
 
-    // Atjauninām treniņa pamata informāciju
-    const updated = await WorkoutModel.update(
-      id,
-      name !== undefined ? name : workout.name,
-      description !== undefined ? description : workout.description,
-      duration !== undefined ? duration : workout.duration,
-      caloriesBurned !== undefined ? caloriesBurned : workout.calories_burned
-    );
-
-    if (!updated) {
-      return res.status(500).json({
+    if (!name || !name.trim()) {
+      return res.status(400).json({
         success: false,
-        message: 'Failed to update workout'
+        message: 'Workout name is required'
       });
     }
 
-    // Ja vingrinājumi ir padoti, dzēšam vecos un pievienojam jaunos vienā reizē
-    if (exercises && exercises.length > 0) {
-      await WorkoutModel.removeAllExercises(id);
-      await WorkoutModel.addExercisesBulk(id, exercises);
+    // Atjauninām treniņa pamata informāciju
+    await WorkoutModel.update(
+      id,
+      name.trim(),
+      description || null
+    );
+
+    await WorkoutExerciseModel.deleteByWorkoutId(id);
+
+    if (exercises?.length) {
+      await WorkoutExerciseModel.addMultiple(id, exercises);
     }
 
     const updatedWorkout = await WorkoutModel.findById(id);
@@ -265,7 +320,7 @@ router.post('/:workoutId/exercises', authenticateToken, async (req, res) => {
     }
 
     // Add exercise set to workout
-    const workoutExercise = await WorkoutModel.addExercise(
+    const workoutExercise = await WorkoutExerciseModel.add(
       workoutId,
       exerciseId,
       setNumber,
@@ -320,7 +375,7 @@ router.put('/:workoutId/exercises/:exerciseId', authenticateToken, async (req, r
     }
 
     // Update exercise in workout
-    const updated = await WorkoutModel.updateExercise(
+    const updated = await WorkoutExerciseModel.update(
       workoutId,
       exerciseId,
       sets,
@@ -381,7 +436,7 @@ router.delete('/:workoutId/exercises/set/:setId', authenticateToken, async (req,
     }
 
     // Remove exercise set from workout
-    const removed = await WorkoutModel.removeExercise(setId);
+    const removed = await WorkoutExerciseModel.remove(setId);
     if (removed) {
       res.json({
         success: true,
@@ -439,7 +494,7 @@ router.delete('/:workoutId/exercises/:exerciseId', authenticateToken, async (req
 
     // Delete all sets for this exercise
     for (const set of exerciseData.sets) {
-      await WorkoutModel.removeExercise(set.id);
+      await WorkoutExerciseModel.remove(set.id);
     }
 
     const updatedWorkout = await WorkoutModel.findById(workoutId);
@@ -458,6 +513,595 @@ router.delete('/:workoutId/exercises/:exerciseId', authenticateToken, async (req
   }
 });
 
+
+// ==================== COMPLETED WORKOUTS ROUTES ====================
+
+// ==================== WORKOUT SESSION ROUTES ====================
+
+/**
+ * POST /api/workouts/:id/start
+ * Start a new workout session
+ */
+router.post('/:id/start', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.userId;
+
+    // Pārbaudām vai treniņš eksistē
+    const workout = await WorkoutModel.findById(id);
+    if (!workout) {
+      return res.status(404).json({
+        success: false,
+        message: 'Workout not found'
+      });
+    }
+
+    // Pārbaudām vai treniņš pieder autentificētajam lietotājam
+    if (workout.user_id !== userId) {
+      return res.status(403).json({
+        success: false,
+        message: 'You do not have permission to start this workout'
+      });
+    }
+
+    // Sākam treniņu sesiju
+    const workoutLog = await workoutLogModel.start(userId, id);
+
+    for (const exercise of workout.exercises || []) {
+      const exerciseLogId = await ExerciseLogModel.add(workoutLog.id, exercise.exercise_id);
+
+      for (const set of exercise.sets || []) {
+        await SetLogModel.add(
+          exerciseLogId,
+          set.set_number,
+          set.reps,
+          set.weight
+        );
+      }
+    }
+
+    res.status(201).json({
+      success: true,
+      message: 'Workout started successfully',
+      data: workoutLog
+    });
+  } catch (error) {
+    console.error('Error starting workout:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to start workout',
+      error: error.message
+    });
+  }
+});
+
+/**
+ * GET /api/workouts/session/ongoing
+ * Get the current ongoing workout for the authenticated user
+ */
+router.get('/session/ongoing', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+
+    // Meklējam tekošo treniņu (bez completed_at)
+    const ongoingWorkout = await workoutLogModel.getOngoing(userId);
+
+    if (!ongoingWorkout) {
+      return res.json({
+        success: true,
+        data: null
+      });
+    }
+
+    // Iegūstam treniņa detaļas
+    const sessionPayload = await buildWorkoutSessionPayload(ongoingWorkout);
+
+    res.json({
+      success: true,
+      data: sessionPayload
+    });
+  } catch (error) {
+    console.error('Error fetching ongoing workout:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch ongoing workout',
+      error: error.message
+    });
+  }
+});
+
+/**
+ * GET /api/workouts/session/:sessionId
+ * Get an editable workout session with exercise and set logs
+ */
+router.get('/session/:sessionId', authenticateToken, async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+    const userId = req.user.userId;
+
+    const session = await workoutLogModel.findById(sessionId);
+    if (!session) {
+      return res.status(404).json({
+        success: false,
+        message: 'Workout session not found'
+      });
+    }
+
+    if (!ownsSession(session, userId)) {
+      return res.status(403).json({
+        success: false,
+        message: 'You do not have permission to view this session'
+      });
+    }
+
+    res.json({
+      success: true,
+      data: await buildWorkoutSessionPayload(session)
+    });
+  } catch (error) {
+    console.error('Error fetching workout session:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch workout session',
+      error: error.message
+    });
+  }
+});
+
+/**
+ * POST /api/workouts/session/:sessionId/exercises
+ * Add an exercise to an active workout session
+ */
+router.post('/session/:sessionId/exercises', authenticateToken, async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+    const userId = req.user.userId;
+    const { exerciseId, notes = null, sets = [] } = req.body;
+
+    if (!exerciseId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Exercise ID is required'
+      });
+    }
+
+    const session = await workoutLogModel.findById(sessionId);
+    if (!session) {
+      return res.status(404).json({
+        success: false,
+        message: 'Workout session not found'
+      });
+    }
+
+    if (!ownsSession(session, userId)) {
+      return res.status(403).json({
+        success: false,
+        message: 'You do not have permission to edit this session'
+      });
+    }
+
+    if (session.completed_at) {
+      return res.status(400).json({
+        success: false,
+        message: 'Completed sessions cannot be edited'
+      });
+    }
+
+    const exercise = await ExerciseModel.findById(exerciseId);
+    if (!exercise || (Number(exercise.user_id) !== Number(userId) && !exercise.is_public)) {
+      return res.status(404).json({
+        success: false,
+        message: 'Exercise not found'
+      });
+    }
+
+    const exerciseLogId = await ExerciseLogModel.add(sessionId, exerciseId, notes);
+    const setsToCreate = sets.length ? sets : [{ reps: 10, weight: null, restDuration: null }];
+
+    for (let index = 0; index < setsToCreate.length; index += 1) {
+      const set = setsToCreate[index];
+      await SetLogModel.add(
+        exerciseLogId,
+        set.setNumber || set.set_number || index + 1,
+        parseLogInt(set.reps),
+        parseLogFloat(set.weight)
+      );
+    }
+
+    res.status(201).json({
+      success: true,
+      message: 'Exercise added to session',
+      data: await buildWorkoutSessionPayload(session)
+    });
+  } catch (error) {
+    console.error('Error adding session exercise:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to add exercise to session',
+      error: error.message
+    });
+  }
+});
+
+/**
+ * PUT /api/workouts/session/exercises/:exerciseLogId
+ * Update notes for a session exercise
+ */
+router.put('/session/exercises/:exerciseLogId', authenticateToken, async (req, res) => {
+  try {
+    const { exerciseLogId } = req.params;
+    const userId = req.user.userId;
+    const { notes = null } = req.body;
+
+    const ownedExerciseLog = await findOwnedExerciseLog(exerciseLogId, userId);
+    if (ownedExerciseLog.status) {
+      return res.status(ownedExerciseLog.status).json({
+        success: false,
+        message: ownedExerciseLog.message
+      });
+    }
+
+    if (ownedExerciseLog.session.completed_at) {
+      return res.status(400).json({
+        success: false,
+        message: 'Completed sessions cannot be edited'
+      });
+    }
+
+    await ExerciseLogModel.update(exerciseLogId, notes);
+
+    res.json({
+      success: true,
+      message: 'Session exercise updated',
+      data: await buildWorkoutSessionPayload(ownedExerciseLog.session)
+    });
+  } catch (error) {
+    console.error('Error updating session exercise:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to update session exercise',
+      error: error.message
+    });
+  }
+});
+
+/**
+ * DELETE /api/workouts/session/exercises/:exerciseLogId
+ * Remove an exercise and its sets from a session
+ */
+router.delete('/session/exercises/:exerciseLogId', authenticateToken, async (req, res) => {
+  try {
+    const { exerciseLogId } = req.params;
+    const userId = req.user.userId;
+
+    const ownedExerciseLog = await findOwnedExerciseLog(exerciseLogId, userId);
+    if (ownedExerciseLog.status) {
+      return res.status(ownedExerciseLog.status).json({
+        success: false,
+        message: ownedExerciseLog.message
+      });
+    }
+
+    if (ownedExerciseLog.session.completed_at) {
+      return res.status(400).json({
+        success: false,
+        message: 'Completed sessions cannot be edited'
+      });
+    }
+
+    await ExerciseLogModel.delete(exerciseLogId);
+
+    res.json({
+      success: true,
+      message: 'Session exercise removed',
+      data: await buildWorkoutSessionPayload(ownedExerciseLog.session)
+    });
+  } catch (error) {
+    console.error('Error removing session exercise:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to remove session exercise',
+      error: error.message
+    });
+  }
+});
+
+/**
+ * POST /api/workouts/session/exercises/:exerciseLogId/sets
+ * Add a set to a session exercise
+ */
+router.post('/session/exercises/:exerciseLogId/sets', authenticateToken, async (req, res) => {
+  try {
+    const { exerciseLogId } = req.params;
+    const userId = req.user.userId;
+    const { reps = 10, weight = null, restDuration = null } = req.body;
+
+    const ownedExerciseLog = await findOwnedExerciseLog(exerciseLogId, userId);
+    if (ownedExerciseLog.status) {
+      return res.status(ownedExerciseLog.status).json({
+        success: false,
+        message: ownedExerciseLog.message
+      });
+    }
+
+    if (ownedExerciseLog.session.completed_at) {
+      return res.status(400).json({
+        success: false,
+        message: 'Completed sessions cannot be edited'
+      });
+    }
+
+    const nextSetNumber = await SetLogModel.getNextSetNumber(exerciseLogId);
+    await SetLogModel.add(
+      exerciseLogId,
+      nextSetNumber,
+      parseLogInt(reps, 10),
+      parseLogFloat(weight),
+      restDuration !== undefined && restDuration !== null && restDuration !== '' ? parseLogInt(restDuration, null) : null
+    );
+
+    res.status(201).json({
+      success: true,
+      message: 'Set added to session exercise',
+      data: await buildWorkoutSessionPayload(ownedExerciseLog.session)
+    });
+  } catch (error) {
+    console.error('Error adding session set:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to add session set',
+      error: error.message
+    });
+  }
+});
+
+/**
+ * PUT /api/workouts/session/sets/:setLogId
+ * Update a session set
+ */
+router.put('/session/sets/:setLogId', authenticateToken, async (req, res) => {
+  try {
+    const { setLogId } = req.params;
+    const userId = req.user.userId;
+    const { reps = 0, weight = null, restDuration = null } = req.body;
+
+    const ownedSetLog = await findOwnedSetLog(setLogId, userId);
+    if (ownedSetLog.status) {
+      return res.status(ownedSetLog.status).json({
+        success: false,
+        message: ownedSetLog.message
+      });
+    }
+
+    if (ownedSetLog.session.completed_at) {
+      return res.status(400).json({
+        success: false,
+        message: 'Completed sessions cannot be edited'
+      });
+    }
+
+    await SetLogModel.update(
+      setLogId,
+      parseLogInt(reps),
+      parseLogFloat(weight),
+      restDuration !== undefined && restDuration !== null && restDuration !== '' ? parseLogInt(restDuration, null) : null
+    );
+
+    res.json({
+      success: true,
+      message: 'Session set updated',
+      data: await buildWorkoutSessionPayload(ownedSetLog.session)
+    });
+  } catch (error) {
+    console.error('Error updating session set:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to update session set',
+      error: error.message
+    });
+  }
+});
+
+/**
+ * DELETE /api/workouts/session/sets/:setLogId
+ * Remove a set from a session exercise
+ */
+router.delete('/session/sets/:setLogId', authenticateToken, async (req, res) => {
+  try {
+    const { setLogId } = req.params;
+    const userId = req.user.userId;
+
+    const ownedSetLog = await findOwnedSetLog(setLogId, userId);
+    if (ownedSetLog.status) {
+      return res.status(ownedSetLog.status).json({
+        success: false,
+        message: ownedSetLog.message
+      });
+    }
+
+    if (ownedSetLog.session.completed_at) {
+      return res.status(400).json({
+        success: false,
+        message: 'Completed sessions cannot be edited'
+      });
+    }
+
+    await SetLogModel.delete(setLogId);
+
+    res.json({
+      success: true,
+      message: 'Session set removed',
+      data: await buildWorkoutSessionPayload(ownedSetLog.session)
+    });
+  } catch (error) {
+    console.error('Error removing session set:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to remove session set',
+      error: error.message
+    });
+  }
+});
+
+/**
+ * POST /api/workouts/session/:sessionId/complete
+ * Complete a workout session
+ */
+router.post('/session/:sessionId/complete', authenticateToken, async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+    const userId = req.user.userId;
+    const { exercises } = req.body;
+
+    // Pārbaudām vai sesija pieder autentificētajam lietotājam
+    const session = await workoutLogModel.findById(sessionId);
+    if (!session) {
+      return res.status(404).json({
+        success: false,
+        message: 'Workout session not found'
+      });
+    }
+
+    if (!ownsSession(session, userId)) {
+      return res.status(403).json({
+        success: false,
+        message: 'You do not have permission to complete this session'
+      });
+    }
+
+    // Pabeigzam treniņu sesiju
+    if (session.completed_at) {
+      return res.status(400).json({
+        success: false,
+        message: 'Workout session is already completed'
+      });
+    }
+
+    if (exercises !== undefined && !Array.isArray(exercises)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Exercises must be an array'
+      });
+    }
+
+    if (Array.isArray(exercises)) {
+      for (const exercise of exercises) {
+        if (!exercise.exerciseId) {
+          return res.status(400).json({
+            success: false,
+            message: 'Each exercise log needs an exerciseId'
+          });
+        }
+
+        const exerciseRecord = await ExerciseModel.findById(exercise.exerciseId);
+        if (!exerciseRecord || (Number(exerciseRecord.user_id) !== Number(userId) && !exerciseRecord.is_public)) {
+          return res.status(404).json({
+            success: false,
+            message: 'Exercise not found'
+          });
+        }
+      }
+
+      await ExerciseLogModel.deleteByWorkoutLogId(sessionId);
+
+      for (let exerciseIndex = 0; exerciseIndex < exercises.length; exerciseIndex += 1) {
+        const exercise = exercises[exerciseIndex];
+        const exerciseLogId = await ExerciseLogModel.add(
+          sessionId,
+          exercise.exerciseId,
+          exercise.notes ?? null
+        );
+
+        const sets = Array.isArray(exercise.sets) ? exercise.sets : [];
+        for (let setIndex = 0; setIndex < sets.length; setIndex += 1) {
+          const set = sets[setIndex];
+
+          await SetLogModel.add(
+            exerciseLogId,
+            set.setNumber || set.set_number || setIndex + 1,
+            parseLogInt(set.reps),
+            parseLogFloat(set.weight),
+            set.restDuration !== undefined && set.restDuration !== null && set.restDuration !== ''
+              ? parseLogInt(set.restDuration, null)
+              : null
+          );
+        }
+      }
+    }
+
+    const completed = await workoutLogModel.complete(sessionId);
+
+    if (completed) {
+      const updatedSession = await workoutLogModel.findById(sessionId);
+      res.json({
+        success: true,
+        message: 'Workout completed successfully',
+        data: await buildWorkoutSessionPayload(updatedSession)
+      });
+    } else {
+      res.status(500).json({
+        success: false,
+        message: 'Failed to complete workout'
+      });
+    }
+  } catch (error) {
+    console.error('Error completing workout:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to complete workout',
+      error: error.message
+    });
+  }
+});
+
+/**
+ * DELETE /api/workouts/session/:sessionId
+ * Cancel/delete a workout session
+ */
+router.delete('/session/:sessionId', authenticateToken, async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+    const userId = req.user.userId;
+
+    // Pārbaudām vai sesija pieder autentificētajam lietotājam
+    const session = await workoutLogModel.findById(sessionId);
+    if (!session) {
+      return res.status(404).json({
+        success: false,
+        message: 'Workout session not found'
+      });
+    }
+
+    if (session.user_id !== userId) {
+      return res.status(403).json({
+        success: false,
+        message: 'You do not have permission to delete this session'
+      });
+    }
+
+    // Dzēšam treniņu sesiju
+    const deleted = await workoutLogModel.delete(sessionId);
+
+    if (deleted) {
+      res.json({
+        success: true,
+        message: 'Workout session cancelled successfully'
+      });
+    } else {
+      res.status(500).json({
+        success: false,
+        message: 'Failed to cancel workout session'
+      });
+    }
+  } catch (error) {
+    console.error('Error cancelling workout:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to cancel workout',
+      error: error.message
+    });
+  }
+});
 
 // ==================== COMPLETED WORKOUTS ROUTES ====================
 

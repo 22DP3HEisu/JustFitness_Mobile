@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, TextInput, TouchableOpacity, ScrollView, Alert, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native'
+import { StyleSheet, Text, View, TextInput, TouchableOpacity, ScrollView, Alert, ActivityIndicator, KeyboardAvoidingView, Platform, Switch } from 'react-native'
 import { StatusBar } from 'expo-status-bar'
 import { LinearGradient } from 'expo-linear-gradient'
 import { useRouter } from 'expo-router'
@@ -15,6 +15,7 @@ const CreateFoodScreen = () => {
   const [protein, setProtein] = useState('')
   const [carbs, setCarbs] = useState('')
   const [fat, setFat] = useState('')
+  const [isPublic, setIsPublic] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [focusedField, setFocusedField] = useState(null)
 
@@ -50,6 +51,7 @@ const CreateFoodScreen = () => {
           proteinPer100g: proteinValue,
           carbsPer100g: carbsValue,
           fatPer100g: fatValue,
+          isPublic,
         }),
       })
 
@@ -165,6 +167,21 @@ const CreateFoodScreen = () => {
               />
             </View>
 
+            <View style={styles.visibilityCard}>
+              <View style={styles.visibilityTextContainer}>
+                <Text style={styles.visibilityTitle}>Public food</Text>
+                <Text style={styles.visibilityText}>
+                  {isPublic ? 'Other users can find and use this food.' : 'Only you can find and use this food.'}
+                </Text>
+              </View>
+              <Switch
+                value={isPublic}
+                onValueChange={setIsPublic}
+                trackColor={{ false: 'rgba(255, 255, 255, 0.22)', true: 'rgba(245, 200, 66, 0.45)' }}
+                thumbColor={isPublic ? '#F5C842' : '#FFFFFF'}
+              />
+            </View>
+
             <TouchableOpacity
               style={[styles.createButton, isLoading && styles.createButtonDisabled]}
               onPress={handleCreate}
@@ -261,6 +278,31 @@ const styles = StyleSheet.create({
     backgroundColor: '#F5C842',
     borderRadius: 12,
     padding: 16,
+  },
+  visibilityCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+    marginBottom: 24,
+  },
+  visibilityTextContainer: {
+    flex: 1,
+  },
+  visibilityTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  visibilityText: {
+    fontSize: 13,
+    color: 'rgba(255, 255, 255, 0.62)',
+    marginTop: 3,
+    lineHeight: 18,
   },
   createButtonDisabled: {
     opacity: 0.7,

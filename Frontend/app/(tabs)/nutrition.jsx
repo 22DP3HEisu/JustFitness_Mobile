@@ -1,6 +1,6 @@
 import {
   StyleSheet, Text, View, ScrollView, TouchableOpacity,
-  Dimensions, TextInput, Modal, Alert, ActivityIndicator
+  Dimensions, TextInput, Modal, Alert, ActivityIndicator, PanResponder, Animated
 } from 'react-native'
 import { StatusBar } from 'expo-status-bar'
 import { LinearGradient } from 'expo-linear-gradient'
@@ -9,6 +9,7 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons'
 import { useAuth } from '../_context/AuthContext'
 import { useFocusEffect, useRouter } from 'expo-router'
 import { useSelection } from '../_context/SelectionContext'
+import { Try } from 'expo-router/build/views/Try'
 
 const { width } = Dimensions.get('window')
 
@@ -37,6 +38,8 @@ const NutritionScreen = () => {
   const [error, setError] = useState(null)
 
   const [foods, setFoods] = useState([]);
+  const [swipedItemId, setSwipedItemId] = useState(null);
+  const [touchStart, setTouchStart] = useState({ x: 0, y: 0 });
 
   // ── Fetch all meals + their foods ──────────────────────────────────────────
   const fetchNutritionData = async () => {
@@ -152,7 +155,7 @@ const NutritionScreen = () => {
             ...prevMeals,
             [mealId]: {
               ...prevMeals[mealId],
-            backendId: updatedMeal.id,
+              backendId: updatedMeal.id,
               items: updatedMeal.foods || []
             }
           }));
@@ -179,6 +182,27 @@ const NutritionScreen = () => {
 
   const handleAddWater = () => {
     setWaterMl((prev) => Math.min(prev + 250, WATER_GOAL_ML))
+  }
+
+  const removeFoodItem = async (mealId, foodId) => {
+    try {
+      const { data } = await authFetch(`/api/meals/${mealId}/foods/${foodId}`, {
+          method: 'DELETE'
+      })
+
+      if (data.success) {
+        setMeals(prevMeals => ({
+          ...prevMeals,
+          [mealId]: {
+            ...prevMeals[mealId],
+            items: (prevMeals[mealId]?.items || []).filter(item => item.id !== foodId)
+          }
+        }))
+      }
+    } catch (error) {
+      console.error('Error removing food item:', error)
+    }
+    setSwipedItemId(null)
   }
 
   // ── Render ─────────────────────────────────────────────────────────────────
@@ -289,23 +313,69 @@ const NutritionScreen = () => {
                       <Text style={styles.emptyMealText}>No foods logged yet</Text>
                     </View>
                   ) : (
-                    (meal.items ?? []).map((item, index) => (
-                      <View
-                        key={item.id ?? index}
-                        style={[
-                          styles.foodItem,
-                          index === meal.items.length - 1 && { borderBottomWidth: 0 },
-                        ]}
-                      >
-                        <View style={styles.foodInfo}>
-                          <Text style={styles.foodName}>{item.name}</Text>
-                          {item.detail ? (
-                            <Text style={styles.foodDetail}>{item.detail}</Text>
-                          ) : null}
+                    (meal.items ?? []).map((item, index) => {
+                      const isSwipped = swipedItemId === `${meal.id}-${item.id}`;
+                      
+                      const handleTouchStart = (e) => {
+                        setTouchStart({ x: e.nativeEvent.pageX, y: e.nativeEvent.pageY });
+                      };
+                      
+                      const handleTouchEnd = (e) => {
+                        const distance = e.nativeEvent.pageX - touchStart.x;
+                        // Swiped left at least 50px
+                        if (distance < -50) {
+                          setSwipedItemId(`${meal.id}-${item.id}`);
+                        } else if (distance > 50) {
+                          // Swiped right - close
+                          setSwipedItemId(null);
+                        }
+                      };
+                      
+                      return (
+                        <View
+                          key={item.id ?? index}
+                          style={[
+                            styles.foodItemContainer,
+                            index === meal.items.length - 1 && { borderBottomWidth: 0 },
+                          ]}
+                          onTouchStart={handleTouchStart}
+                          onTouchEnd={handleTouchEnd}
+                        >
+                          <TouchableOpacity 
+                            style={styles.foodItem}
+                            onPress={() => {
+                              if (isSwipped) {
+                                setSwipedItemId(null)
+                                return
+                              }
+
+                              router.push({
+                                pathname: '/food-details',
+                                params: { id: item.food_id ?? item.id },
+                              })
+                            }}
+                            delayPressIn={0}
+                            activeOpacity={isSwipped ? 1 : 0.7}
+                          >
+                            <View style={styles.foodInfo}>
+                              <Text style={styles.foodName}>{item.name}</Text>
+                              {item.detail ? (
+                                <Text style={styles.foodDetail}>{item.detail}</Text>
+                              ) : null}
+                            </View>
+                            <Text style={styles.foodCalories}>{item.calories || item.calories_per_100g * (item.quantity / 100)} kcal</Text>
+                          </TouchableOpacity>
+                          {isSwipped && (
+                            <TouchableOpacity 
+                              style={styles.removeButton}
+                              onPress={() => removeFoodItem(meal.id, item.id)}
+                            >
+                              <Ionicons name="trash" size={20} color="#FFFFFF" />
+                            </TouchableOpacity>
+                          )}
                         </View>
-                        <Text style={styles.foodCalories}>{item.calories_per_100g * (item.quantity / 100)} kcal</Text>
-                      </View>
-                    ))
+                      );
+                    })
                   )}
 
                   <TouchableOpacity style={styles.addFoodButton} onPress={() => openFoodSelection(meal.id)}>
@@ -473,7 +543,12 @@ const styles = StyleSheet.create({
   },
   emptyMealText: { fontSize: 13, color: 'rgba(255,255,255,0.35)', fontStyle: 'italic' },
 
+  foodItemContainer: {
+    flexDirection: 'row',
+    alignItems: 'stretch',
+  },
   foodItem: {
+    flex: 1,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -486,6 +561,16 @@ const styles = StyleSheet.create({
   foodName: { fontSize: 14, color: '#FFFFFF', fontWeight: '500' },
   foodDetail: { fontSize: 12, color: 'rgba(255,255,255,0.5)', marginTop: 2 },
   foodCalories: { fontSize: 14, color: 'rgba(255,255,255,0.7)', fontWeight: '500' },
+
+  removeButton: {
+    backgroundColor: '#FF6B6B',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.05)',
+  },
 
   addFoodButton: {
     flexDirection: 'row',

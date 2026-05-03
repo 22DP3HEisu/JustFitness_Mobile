@@ -6,13 +6,22 @@
 
 require('dotenv').config();
 const { db } = require('../lib/database');
-const UserModel = require('../lib/DbModels/userModel');
-const MuscleGroupModel = require('../lib/DbModels/muscleGroupModel');
-const ExerciseModel = require('../lib/DbModels/exerciseModel');
-const WorkoutModel = require('../lib/DbModels/workoutModel');
-const CompletedWorkoutModel = require('../lib/DbModels/completedWorkoutModel');
-const MealModel = require('../lib/DbModels/mealModel');
-const FoodModel = require('../lib/DbModels/foodModel');
+const Models = {
+  UserModel: require('../lib/DbModels/userModel'),
+  RefreshTokenModel: require('../lib/DbModels/refreshTokenModel'),
+  UserSettingsModel: require('../lib/DbModels/userSettingsModel'),
+  WeightHistoryModel: require('../lib/DbModels/weightHistoryModel'),
+  MuscleGroupModel: require('../lib/DbModels/muscleGroupModel'),
+  ExerciseModel: require('../lib/DbModels/exerciseModel'),
+  WorkoutModel: require('../lib/DbModels/workoutModel'),
+  WorkoutExerciseModel: require('../lib/DbModels/workoutExerciseModel'),
+  SetModel: require('../lib/DbModels/exerciseSetModel'),
+  WorkoutLogModel: require('../lib/DbModels/workoutLogModel'),
+  ExerciseLogModel: require('../lib/DbModels/exerciseLogModel'),
+  SetLogModel: require('../lib/DbModels/SetLogModel'),
+  MealModel: require('../lib/DbModels/mealModel'),
+  FoodModel: require('../lib/DbModels/foodModel')
+};
 
 async function setupDatabase() {
   try {
@@ -29,15 +38,61 @@ async function setupDatabase() {
     
     // Create tables (order matters due to foreign key dependencies)
     console.log('📋 Creating tables...');
-    await UserModel.createTable();
-    await MuscleGroupModel.createTable();
-    await ExerciseModel.createTable();
-    await WorkoutModel.createTable();
-    await CompletedWorkoutModel.createTable();
-    await FoodModel.createTable();
-    await MealModel.createTable();
+    for (const modelName in Models) {
+      const model = Models[modelName];
+
+      if (model?.createTable) {
+        try {
+          await model.createTable();
+          console.log(`✓ Created ${modelName.replace('Model', '')}`);
+        } catch (error) {
+          console.error(`❌ Error creating ${modelName}:`, error);
+          throw error;
+        }
+      }
+    }
+
+    const existingMuscleGroups = await db.selectOne('SELECT COUNT(*) as total FROM muscle_groups');
+    if (Number(existingMuscleGroups?.total || 0) > 0) {
+      console.log('✓ Muscle groups already exist, skipping seed data');
+      console.log('✅ Database setup completed successfully!');
+      process.exit(0);
+    }
+
+    console.log('📊 Populating muscle groups...');
+
+    const muscleGroups = [
+      { name: 'Chest', description: 'Pectoral muscles' },
+      { name: 'Lats', description: 'Latissimus dorsi' },
+      { name: 'Rhomboids', description: 'Upper back muscles' },
+      { name: 'Traps', description: 'Trapezius muscles' },
+      { name: 'Lower Back', description: 'Erector spinae' },
+      { name: 'Biceps', description: 'Front arm muscles' },
+      { name: 'Triceps', description: 'Back arm muscles' },
+      { name: 'Forearms', description: 'Lower arm muscles' },
+      { name: 'Quadriceps', description: 'Front thigh muscles' },
+      { name: 'Hamstrings', description: 'Back thigh muscles' },
+      { name: 'Calves', description: 'Lower leg muscles' },
+      { name: "Adductors", description: "Inner thigh muscles" },
+      { name: "Abductors", description: "Outer thigh muscles" },
+      { name: 'Shoulders', description: 'Deltoids' },
+      { name: 'Core', description: 'Abs & lower back' },
+      { name: 'Glutes', description: 'Glute muscles' }
+    ];
+
+    const MuscleGroupModel = Models.MuscleGroupModel;
+
+    for (const mg of muscleGroups) {
+      try {
+        await MuscleGroupModel.create(mg.name, mg.description);
+        console.log(`✓ Created muscle group: ${mg.name}`);
+      } catch (err) {
+        console.warn(`⚠️ Could not create ${mg.name}:`, err.message);
+      }
+    }
     
     console.log('✅ Database setup completed successfully!');
+    process.exit(0);
     
   } catch (error) {
     console.error('❌ Database setup failed:', error);

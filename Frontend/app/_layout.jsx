@@ -82,6 +82,18 @@ export default function RootLayout() {
                     }} 
                 />
                 <Stack.Screen 
+                    name="exercise-details" 
+                    options={{ 
+                        presentation: 'fullScreenModal',
+                    }} 
+                />
+                <Stack.Screen 
+                    name="food-details" 
+                    options={{ 
+                        presentation: 'fullScreenModal',
+                    }} 
+                />
+                <Stack.Screen 
                     name="create-food" 
                     options={{ 
                         presentation: 'fullScreenModal',
@@ -93,6 +105,43 @@ export default function RootLayout() {
                     options={{ 
                         presentation: 'fullScreenModal',
                         gestureEnabled: true,
+                    }} 
+                />
+                <Stack.Screen 
+                    name="workout-session" 
+                    options={{ 
+                        presentation: 'fullScreenModal',
+                        gestureEnabled: true,
+                    }} 
+                />
+                <Stack.Screen 
+                    name="edit-account" 
+                    options={{ 
+                        presentation: 'card',
+                    }} 
+                />
+                <Stack.Screen 
+                    name="edit-profile" 
+                    options={{ 
+                        presentation: 'card',
+                    }} 
+                />
+                <Stack.Screen 
+                    name="edit-units" 
+                    options={{ 
+                        presentation: 'card',
+                    }} 
+                />
+                <Stack.Screen 
+                    name="edit-language" 
+                    options={{ 
+                        presentation: 'card',
+                    }} 
+                />
+                <Stack.Screen 
+                    name="edit-goals" 
+                    options={{ 
+                        presentation: 'card',
                     }} 
                 />
             </Stack>

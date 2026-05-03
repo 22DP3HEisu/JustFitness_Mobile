@@ -1,27 +1,23 @@
 const { db } = require('../database');
 
 /**
- * User model for database operations
- * MySQL implementation
+ * Lietotāja modelis datubāzes operācijām
+ * MySQL implementācija
  */
 class UserModel {
+  static tableName = 'users';
   
   /**
-   * Create users table (run once during setup)
+   * Izveido lietotāju tabulu (palaists vienu reizi iestatīšanas laikā)
    */
   static async createTable() {
+    // Izveido galveno lietotāju tabulu ar pamata informāciju
     const createTableSQL = `
       CREATE TABLE IF NOT EXISTS users (
         id INT AUTO_INCREMENT PRIMARY KEY,
         email VARCHAR(255) UNIQUE NOT NULL,
         password VARCHAR(255) NOT NULL,
         name VARCHAR(255) NOT NULL,
-        gender VARCHAR(20),
-        height DECIMAL(5,2),
-        height_unit VARCHAR(5),
-        weight DECIMAL(5,2),
-        weight_unit VARCHAR(5),
-        goal_weight DECIMAL(5,2),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         last_login TIMESTAMP NULL,
         is_active BOOLEAN DEFAULT TRUE,
@@ -40,33 +36,27 @@ class UserModel {
   }
 
   /**
-   * Create a new user
+   * Izveido jaunu lietotāju
    */
   static async create(userData) {
-    const { email, password, name, gender, height, heightUnit, weight, weightUnit, goalWeight } = userData;
+    const { email, password, name } = userData;
     
     const sql = `
-      INSERT INTO users (email, password, name, gender, height, height_unit, weight, weight_unit, goal_weight)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO users (email, password, name)
+      VALUES (?, ?, ?)
     `;
     
     const params = [
       email.toLowerCase(),
       password,
-      name,
-      gender || null,
-      height || null,
-      heightUnit || null,
-      weight || null,
-      weightUnit || null,
-      goalWeight || null
+      name
     ];
     
     try {
       const result = await db.insert(sql, params);
       const userId = result.insertId;
       
-      // Return the created user (without password)
+      // Atgriež izveidoto lietotāju (bez paroles)
       return await this.findById(userId);
     } catch (error) {
       console.error('❌ Error creating user:', error);
@@ -75,12 +65,11 @@ class UserModel {
   }
 
   /**
-   * Find user by email
+   * Atrod lietotāju pēc e-pasta
    */
   static async findByEmail(email) {
     const sql = `
-      SELECT id, email, password, name, gender, height, height_unit, weight, weight_unit, goal_weight,
-             created_at, last_login, is_active
+      SELECT id, email, password, name, created_at, last_login, is_active
       FROM users 
       WHERE email = ? AND is_active = TRUE
     `;
@@ -95,12 +84,15 @@ class UserModel {
   }
 
   /**
-   * Find user by ID
+   * Atrod lietotāju pēc ID
    */
-  static async findById(id) {
+  static async findById(id, includePassword = false) {
+    const fields = includePassword 
+      ? 'id, email, password, name, created_at, last_login, is_active'
+      : 'id, email, name, created_at, last_login, is_active';
+    
     const sql = `
-      SELECT id, email, name, gender, height, height_unit, weight, weight_unit, goal_weight,
-             created_at, last_login, is_active
+      SELECT ${fields}
       FROM users 
       WHERE id = ? AND is_active = TRUE
     `;
@@ -115,7 +107,7 @@ class UserModel {
   }
 
   /**
-   * Update last login time
+   * Atjaunina pēdējā pierakstīšanās laiku
    */
   static async updateLastLogin(userId) {
     const sql = `
@@ -134,12 +126,11 @@ class UserModel {
   }
 
   /**
-   * Get all users (for admin purposes)
+   * Iegūst visus lietotājus (administratora nolūkiem)
    */
   static async findAll(limit = 100, offset = 0) {
     const sql = `
-      SELECT id, email, name, gender, height, height_unit, weight, weight_unit, goal_weight,
-             created_at, last_login, is_active
+      SELECT id, email, name, created_at, last_login, is_active
       FROM users 
       WHERE is_active = TRUE
       ORDER BY created_at DESC
@@ -156,7 +147,7 @@ class UserModel {
   }
 
   /**
-   * Count total users
+   * Aprēķina kopējo lietotāju skaitu
    */
   static async count() {
     const sql = 'SELECT COUNT(*) as total FROM users WHERE is_active = TRUE';
@@ -171,7 +162,7 @@ class UserModel {
   }
 
   /**
-   * Soft delete user (deactivate)
+   * Mīksti dzēš lietotāju (deaktivizē)
    */
   static async deactivate(userId) {
     const sql = `
@@ -190,17 +181,18 @@ class UserModel {
   }
 
   /**
-   * Update user profile
+   * Atjaunina lietotāja profila informāciju
    */
   static async updateProfile(userId, updates) {
-    const allowedFields = ['name', 'gender', 'height', 'height_unit', 'weight', 'weight_unit', 'goal_weight'];
+    // Atļautie lauki, ko var atjaunināt
+    const allowedFields = ['name', 'email'];
     const updateFields = [];
     const params = [];
     
     for (const [field, value] of Object.entries(updates)) {
       if (allowedFields.includes(field) && value !== undefined) {
         updateFields.push(`${field} = ?`);
-        params.push(value);
+        params.push(field === 'email' ? value.toLowerCase() : value);
       }
     }
     
@@ -223,6 +215,28 @@ class UserModel {
       return null;
     } catch (error) {
       console.error('❌ Error updating user profile:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Atjaunina lietotāja paroli
+   */
+  static async updatePassword(userId, hashedPassword) {
+    const sql = `
+      UPDATE users 
+      SET password = ?
+      WHERE id = ? AND is_active = TRUE
+    `;
+    
+    try {
+      const rowsAffected = await db.update(sql, [hashedPassword, userId]);
+      if (rowsAffected > 0) {
+        return await this.findById(userId);
+      }
+      return null;
+    } catch (error) {
+      console.error('❌ Error updating user password:', error);
       throw error;
     }
   }

@@ -190,6 +190,22 @@ const SelectItemsScreen = () => {
     }
   }
 
+  const openItemDetails = (item) => {
+    if (type === 'exercise') {
+      router.push({
+        pathname: '/exercise-details',
+        params: { id: item.id },
+      })
+    }
+
+    if (type === 'food') {
+      router.push({
+        pathname: '/food-details',
+        params: { id: item.id },
+      })
+    }
+  }
+
   const filteredItems = useMemo(() => {
     return items
       .filter(item => !excludedIds.includes(item.id))
@@ -223,6 +239,15 @@ const SelectItemsScreen = () => {
               <Text style={styles.itemSubtext}>{subtext}</Text>
             )}
           </View>
+          {(type === 'exercise' || type === 'food') && (
+            <TouchableOpacity
+              style={styles.infoButton}
+              onPress={() => openItemDetails(item)}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
+              <Ionicons name="information-circle-outline" size={22} color="rgba(255, 255, 255, 0.65)" />
+            </TouchableOpacity>
+          )}
           {mode === 'single' ? (
             <View style={[styles.radio, isSelected && styles.radioSelected]}>
               {isSelected && <View style={styles.radioInner} />}
@@ -472,6 +497,9 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255, 255, 255, 0.4)',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  infoButton: {
+    padding: 4,
   },
   radioSelected: {
     borderColor: '#F5C842',

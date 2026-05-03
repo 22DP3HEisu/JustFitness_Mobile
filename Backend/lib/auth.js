@@ -1,8 +1,6 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-
-// In-memory refresh token storage (can be moved to Redis in production)
-const refreshTokens = [];
+const RefreshTokenModel = require('./DbModels/refreshTokenModel');
 
 /**
  * Authentication utility functions
@@ -31,22 +29,16 @@ class AuthService {
         type: 'refresh'
       },
       process.env.JWT_SECRET,
-      { expiresIn: '7d' }
+      { expiresIn: '30d' }
     );
   }
 
   // Generate both tokens and store refresh token
-  static generateTokens(userId, email) {
+  static async generateTokens(userId, email) {
     const accessToken = this.generateAccessToken(userId, email);
     const refreshToken = this.generateRefreshToken(userId, email);
     
-    // Store refresh token
-    refreshTokens.push({
-      token: refreshToken,
-      userId,
-      createdAt: new Date(),
-      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days
-    });
+    await RefreshTokenModel.create(userId, refreshToken);
     
     return { accessToken, refreshToken };
   }
@@ -107,65 +99,45 @@ class AuthService {
   // Verify refresh token
   static verifyRefreshToken(refreshToken) {
     return new Promise((resolve, reject) => {
-      jwt.verify(refreshToken, process.env.JWT_SECRET, (err, decoded) => {
+      jwt.verify(refreshToken, process.env.JWT_SECRET, async (err, decoded) => {
         if (err) {
           return reject(new Error('Invalid or expired refresh token'));
         }
 
-        // Check if refresh token exists in storage
-        const storedRefreshToken = refreshTokens.find(rt => rt.token === refreshToken);
-        if (!storedRefreshToken) {
-          return reject(new Error('Refresh token not found'));
-        }
-
-        // Check if expired
-        if (storedRefreshToken.expiresAt < new Date()) {
-          // Remove expired token
-          this.removeRefreshToken(refreshToken);
-          return reject(new Error('Refresh token expired'));
-        }
-
-        // Verify token type
         if (decoded.type !== 'refresh') {
           return reject(new Error('Invalid token type'));
         }
 
-        resolve(decoded);
+        try {
+          const storedRefreshToken = await RefreshTokenModel.findValid(refreshToken);
+          if (!storedRefreshToken) {
+            return reject(new Error('Refresh token not found'));
+          }
+
+          resolve(decoded);
+        } catch (error) {
+          reject(error);
+        }
       });
     });
   }
 
-  // Extend refresh token expiration (sliding expiration)
-  static extendRefreshToken(refreshToken) {
-    const storedRefreshToken = refreshTokens.find(rt => rt.token === refreshToken);
-    if (storedRefreshToken) {
-      // Extend expiration by another 7 days from now
-      storedRefreshToken.expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-      return true;
-    }
-    return false;
+  static async rotateRefreshToken(oldRefreshToken, userId, email) {
+    await RefreshTokenModel.remove(oldRefreshToken);
+    const refreshToken = this.generateRefreshToken(userId, email);
+    await RefreshTokenModel.create(userId, refreshToken);
+    return refreshToken;
   }
 
   // Remove refresh token
-  static removeRefreshToken(refreshToken) {
-    const tokenIndex = refreshTokens.findIndex(rt => rt.token === refreshToken);
-    if (tokenIndex > -1) {
-      refreshTokens.splice(tokenIndex, 1);
-      return true;
-    }
-    return false;
-  }
-
-  // Get all refresh tokens for a user
-  static getUserRefreshTokens(userId) {
-    return refreshTokens.filter(rt => rt.userId === userId);
+  static async removeRefreshToken(refreshToken) {
+    const removedCount = await RefreshTokenModel.remove(refreshToken);
+    return removedCount > 0;
   }
 
   // Remove all refresh tokens for a user (logout from all devices)
-  static removeAllUserRefreshTokens(userId) {
-    const userTokens = refreshTokens.filter(rt => rt.userId === userId);
-    userTokens.forEach(token => this.removeRefreshToken(token.token));
-    return userTokens.length;
+  static async removeAllUserRefreshTokens(userId) {
+    return await RefreshTokenModel.removeAllForUser(userId);
   }
 }
 

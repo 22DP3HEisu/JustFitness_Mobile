@@ -4,7 +4,27 @@ const {
   authenticateToken 
 } = require('../lib/auth');
 const UserModel = require('../lib/DbModels/userModel');
+const UserSettingsModel = require('../lib/DbModels/userSettingsModel');
+const WeightHistoryModel = require('../lib/DbModels/weightHistoryModel');
 const router = express.Router();
+
+const toKilograms = (weight, unit = 'kg') => {
+  const value = parseFloat(weight);
+  if (!Number.isFinite(value)) {
+    return null;
+  }
+
+  return unit === 'lb' || unit === 'lbs' ? value * 0.45359237 : value;
+};
+
+const toCentimeters = (height, unit = 'cm') => {
+  const value = parseFloat(height);
+  if (!Number.isFinite(value)) {
+    return null;
+  }
+
+  return unit === 'in' ? value * 2.54 : value;
+};
 
 router.get('/test', (req, res) => {
   res.json({
@@ -16,7 +36,23 @@ router.get('/test', (req, res) => {
 // Register route
 router.post('/register', async (req, res) => {
   try {
-    const { email, password, name, gender, height, heightUnit, weight, weightUnit, goalWeight } = req.body;
+    const { 
+      email, 
+      password, 
+      name, 
+      gender, 
+      birthDate,
+      height, 
+      heightUnit, 
+      weight, 
+      weightUnit, 
+      goalWeight,
+      calorieGoal,
+      proteinGoal,
+      fatGoal,
+      carbGoal,
+      language
+    } = req.body;
 
     // Validate input
     const validation = AuthService.validateRegistration(email, password, name);
@@ -40,24 +76,57 @@ router.post('/register', async (req, res) => {
     // Hash password
     const hashedPassword = await AuthService.hashPassword(password);
 
-    // Create new user in database
+    // Izveido jaunu lietotāju datubāzē
     const newUser = await UserModel.create({
       email,
       password: hashedPassword,
-      name,
-      gender,
-      height,
-      heightUnit,
-      weight,
-      weightUnit,
-      goalWeight
+      name
     });
 
+    // Izveido lietotāja iestatījumus ar mērķiem
+    const goalWeightKg = goalWeight ? toKilograms(goalWeight, weightUnit) : null;
+
+    await UserSettingsModel.create(newUser.id, {
+      language: language || 'en',
+      gender: gender || null,
+      birthDate: birthDate || null,
+      height: height ? toCentimeters(height, heightUnit) : null,
+      heightUnit: heightUnit || 'cm',
+      weightUnit: weightUnit || 'kg',
+      distanceUnit: 'km',
+      goalWeight: goalWeightKg,
+      calorieGoal: calorieGoal ? parseFloat(calorieGoal) : null,
+      proteinGoal: proteinGoal ? parseFloat(proteinGoal) : null,
+      fatGoal: fatGoal ? parseFloat(fatGoal) : null,
+      carbGoal: carbGoal ? parseFloat(carbGoal) : null
+    });
+
+    if (weight) {
+      try {
+        const weightKg = toKilograms(weight, weightUnit);
+
+        if (weightKg == null) {
+          throw new Error('Invalid weight value');
+        }
+
+        await WeightHistoryModel.addEntry(
+          newUser.id,
+          weightKg
+        );
+      } catch (weightError) {
+        console.warn('Could not create initial weight history entry:', weightError.message);
+      }
+    }
+
+    // Iegūst izveidotos iestatījumus
+    const userSettings = await UserSettingsModel.findByUserId(newUser.id);
+
     // Generate tokens
-    const { accessToken, refreshToken } = AuthService.generateTokens(newUser.id, newUser.email);
+    const { accessToken, refreshToken } = await AuthService.generateTokens(newUser.id, newUser.email);
 
     // Return user data (without password)
     const userWithoutPassword = AuthService.sanitizeUser(newUser);
+    userWithoutPassword.settings = userSettings;
 
     res.status(201).json({
       success: true,
@@ -67,7 +136,7 @@ router.post('/register', async (req, res) => {
         accessToken,
         refreshToken,
         accessTokenExpiresIn: '15m',
-        refreshTokenExpiresIn: '7d'
+        refreshTokenExpiresIn: '30d'
       }
     });
 
@@ -117,7 +186,7 @@ router.post('/login', async (req, res) => {
     await UserModel.updateLastLogin(user.id);
 
     // Generate tokens
-    const { accessToken, refreshToken } = AuthService.generateTokens(user.id, user.email);
+    const { accessToken, refreshToken } = await AuthService.generateTokens(user.id, user.email);
 
     // Return user data (without password)
     const userWithoutPassword = AuthService.sanitizeUser(user);
@@ -130,7 +199,7 @@ router.post('/login', async (req, res) => {
         accessToken,
         refreshToken,
         accessTokenExpiresIn: '15m',
-        refreshTokenExpiresIn: '7d'
+        refreshTokenExpiresIn: '30d'
       }
     });
 
@@ -139,36 +208,6 @@ router.post('/login', async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Internal server error during login'
-    });
-  }
-});
-
-// Get current user profile (protected route)
-router.get('/me', authenticateToken, async (req, res) => {
-  try {
-    const user = await UserModel.findById(req.user.userId);
-    
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: 'User not found'
-      });
-    }
-
-    const userWithoutPassword = AuthService.sanitizeUser(user);
-
-    res.json({
-      success: true,
-      data: {
-        user: userWithoutPassword
-      }
-    });
-
-  } catch (error) {
-    console.error('Profile fetch error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Internal server error'
     });
   }
 });
@@ -197,10 +236,8 @@ router.post('/refresh', async (req, res) => {
       });
     }
 
-    // Extend refresh token expiration (sliding window)
-    AuthService.extendRefreshToken(refreshToken);
-
-    // Generate new access token (keep same refresh token)
+    // Rotate refresh token so the session can continue safely.
+    const newRefreshToken = await AuthService.rotateRefreshToken(refreshToken, user.id, user.email);
     const newAccessToken = AuthService.generateAccessToken(user.id, user.email);
 
     res.json({
@@ -208,8 +245,9 @@ router.post('/refresh', async (req, res) => {
       message: 'Access token refreshed successfully',
       data: {
         accessToken: newAccessToken,
-        accessTokenExpiresIn: '15m'
-        // Note: refresh token remains the same
+        refreshToken: newRefreshToken,
+        accessTokenExpiresIn: '15m',
+        refreshTokenExpiresIn: '30d'
       }
     });
 
@@ -222,14 +260,14 @@ router.post('/refresh', async (req, res) => {
   }
 });
 
-// Logout route - requires valid access token
-router.post('/logout', authenticateToken, (req, res) => {
+// Logout route - removes the refresh token for this device.
+router.post('/logout', async (req, res) => {
   try {
     const { refreshToken } = req.body;
 
     // Remove refresh token if provided
     if (refreshToken) {
-      const removed = AuthService.removeRefreshToken(refreshToken);
+      const removed = await AuthService.removeRefreshToken(refreshToken);
       if (removed) {
         console.log('Refresh token successfully removed');
       }
@@ -250,10 +288,10 @@ router.post('/logout', authenticateToken, (req, res) => {
 });
 
 // Logout from all devices
-router.post('/logout-all', authenticateToken, (req, res) => {
+router.post('/logout-all', authenticateToken, async (req, res) => {
   try {
     // Remove all refresh tokens for this user
-    const removedCount = AuthService.removeAllUserRefreshTokens(req.user.userId);
+    const removedCount = await AuthService.removeAllUserRefreshTokens(req.user.userId);
 
     res.json({
       success: true,

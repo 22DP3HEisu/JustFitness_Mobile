@@ -13,6 +13,8 @@ var workouts = require('./routes/workouts');
 var muscleGroups = require('./routes/muscleGroups');
 var meals = require('./routes/meals');
 var foods = require('./routes/foods');
+var dashboard = require('./routes/dashboard');
+var user = require('./routes/user');
 
 var app = express();
 
@@ -38,11 +40,13 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/auth', auth);
+app.use('/api/user', user);
 app.use('/api/exercises', exercises);
 app.use('/api/workouts', workouts);
 app.use('/api/muscle-groups', muscleGroups);
 app.use('/api/meals', meals);
 app.use('/api/foods', foods);
+app.use('/api/dashboard', dashboard);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

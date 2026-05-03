@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, TextInput, TouchableOpacity, ScrollView, Alert, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native'
+import { StyleSheet, Text, View, TextInput, TouchableOpacity, ScrollView, Alert, ActivityIndicator, KeyboardAvoidingView, Platform, Switch } from 'react-native'
 import { StatusBar } from 'expo-status-bar'
 import { LinearGradient } from 'expo-linear-gradient'
 import { useRouter } from 'expo-router'
@@ -16,6 +16,7 @@ const CreateExerciseScreen = () => {
   const [description, setDescription] = useState('')
   const [primaryMuscleGroup, setPrimaryMuscleGroup] = useState(null)
   const [secondaryMuscleGroups, setSecondaryMuscleGroups] = useState([])
+  const [isPublic, setIsPublic] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [focusedField, setFocusedField] = useState(null)
 
@@ -83,6 +84,7 @@ const CreateExerciseScreen = () => {
           description: description.trim() || null,
           primaryMuscleGroupId: primaryMuscleGroup.id,
           secondaryMuscleGroupIds: secondaryMuscleGroups.map(mg => mg.id),
+          isPublic,
         }),
       })
 
@@ -227,6 +229,21 @@ const CreateExerciseScreen = () => {
                   ))}
                 </View>
               )}
+            </View>
+
+            <View style={styles.visibilityCard}>
+              <View style={styles.visibilityTextContainer}>
+                <Text style={styles.visibilityTitle}>Public exercise</Text>
+                <Text style={styles.visibilityText}>
+                  {isPublic ? 'Other users can find and use this exercise.' : 'Only you can find and use this exercise.'}
+                </Text>
+              </View>
+              <Switch
+                value={isPublic}
+                onValueChange={setIsPublic}
+                trackColor={{ false: 'rgba(255, 255, 255, 0.22)', true: 'rgba(245, 200, 66, 0.45)' }}
+                thumbColor={isPublic ? '#F5C842' : '#FFFFFF'}
+              />
             </View>
 
             {/* Info Card */}
@@ -391,6 +408,31 @@ const styles = StyleSheet.create({
     marginBottom: 32,
     borderWidth: 1,
     borderColor: 'rgba(245, 200, 66, 0.3)',
+  },
+  visibilityCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+    marginBottom: 24,
+  },
+  visibilityTextContainer: {
+    flex: 1,
+  },
+  visibilityTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  visibilityText: {
+    fontSize: 13,
+    color: 'rgba(255, 255, 255, 0.62)',
+    marginTop: 3,
+    lineHeight: 18,
   },
   infoText: {
     flex: 1,

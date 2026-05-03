@@ -1,0 +1,385 @@
+import { StyleSheet, Text, View, SafeAreaView, TextInput, TouchableOpacity, Alert, ScrollView, ActivityIndicator } from 'react-native'
+import { StatusBar } from 'expo-status-bar'
+import { LinearGradient } from 'expo-linear-gradient'
+import { useRouter } from 'expo-router'
+import { MaterialIcons } from '@expo/vector-icons'
+import { useAuth } from './_context/AuthContext'
+import { useState, useEffect } from 'react'
+import WeightPickerModal from './_components/WeightPickerModal'
+
+const InputField = ({ label, icon, value, onChangeText, placeholder, keyboardType = 'decimal-pad' }) => (
+  <View style={styles.inputGroup}>
+    <Text style={styles.label}>{label}</Text>
+    <View style={styles.inputContainer}>
+      <MaterialIcons name={icon} size={20} color="rgba(255, 255, 255, 0.7)" style={styles.inputIcon} />
+      <TextInput
+        style={styles.input}
+        placeholder={placeholder}
+        placeholderTextColor="rgba(255, 255, 255, 0.5)"
+        keyboardType={keyboardType}
+        value={value}
+        onChangeText={onChangeText}
+      />
+    </View>
+  </View>
+)
+
+const formatWeight = (weight, unit) => {
+  if (weight == null || weight === '') return 'Izvēlieties mērķa svaru'
+  return `${Number(weight).toFixed(1)} ${unit === 'lb' || unit === 'lbs' ? 'lb' : 'kg'}`
+}
+
+const EditGoalsScreen = () => {
+  const router = useRouter()
+  const { user, authFetch } = useAuth()
+  const [goalWeight, setGoalWeight] = useState('')
+  const [calorieGoal, setCalorieGoal] = useState('')
+  const [proteinGoal, setProteinGoal] = useState('')
+  const [fatGoal, setFatGoal] = useState('')
+  const [carbGoal, setCarbGoal] = useState('')
+  const [isLoading, setIsLoading] = useState(true)
+  const [isSaving, setIsSaving] = useState(false)
+  const [weightUnit, setWeightUnit] = useState('kg')
+  const [showGoalWeightModal, setShowGoalWeightModal] = useState(false)
+
+  useEffect(() => {
+    loadGoalsData()
+  }, [user])
+
+  const loadGoalsData = async () => {
+    if (!user) return
+    try {
+      const { response, data } = await authFetch('/api/user/settings')
+      if (response.ok && data) {
+        setGoalWeight(data.data.goal_weight ? String(data.data.goal_weight) : '')
+        setCalorieGoal(data.data.calorie_goal ? String(data.data.calorie_goal) : '')
+        setProteinGoal(data.data.protein_goal ? String(data.data.protein_goal) : '')
+        setFatGoal(data.data.fat_goal ? String(data.data.fat_goal) : '')
+        setCarbGoal(data.data.carb_goal ? String(data.data.carb_goal) : '')
+        setWeightUnit(data.data.weight_unit || 'kg')
+      }
+    } catch (error) {
+      console.error('Kļūda ielādējot mērķus:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const validateForm = () => {
+    if (goalWeight && isNaN(goalWeight)) {
+      Alert.alert('Kļūda', 'Lūdzu ievadiet derīgu svara mērķa vērtību')
+      return false
+    }
+    if (calorieGoal && isNaN(calorieGoal)) {
+      Alert.alert('Kļūda', 'Lūdzu ievadiet derīgu kaloriju mērķa vērtību')
+      return false
+    }
+    if (proteinGoal && isNaN(proteinGoal)) {
+      Alert.alert('Kļūda', 'Lūdzu ievadiet derīgu proteīna mērķa vērtību')
+      return false
+    }
+    if (fatGoal && isNaN(fatGoal)) {
+      Alert.alert('Kļūda', 'Lūdzu ievadiet derīgu tauku mērķa vērtību')
+      return false
+    }
+    if (carbGoal && isNaN(carbGoal)) {
+      Alert.alert('Kļūda', 'Lūdzu ievadiet derīgu ogļhidrātu mērķa vērtību')
+      return false
+    }
+    return true
+  }
+
+  const handleSave = async () => {
+    if (!validateForm()) return
+
+    setIsSaving(true)
+    try {
+      const { response, data } = await authFetch('/api/user/settings', {
+        method: 'PUT',
+        body: JSON.stringify({
+          goalWeight: goalWeight ? parseFloat(goalWeight) : null,
+          calorieGoal: calorieGoal ? parseFloat(calorieGoal) : null,
+          proteinGoal: proteinGoal ? parseFloat(proteinGoal) : null,
+          fatGoal: fatGoal ? parseFloat(fatGoal) : null,
+          carbGoal: carbGoal ? parseFloat(carbGoal) : null,
+          weightUnit: weightUnit
+        })
+      })
+
+      if (response.ok) {
+        Alert.alert('Veiksmīgi', 'Mērķi atjaunināti')
+        router.back()
+      } else {
+        Alert.alert('Kļūda', data.message || 'Neizdevās atjaunināt mērķus')
+      }
+    } catch (error) {
+      Alert.alert('Kļūda', error.message)
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <LinearGradient
+          colors={['rgba(58, 78, 72, 0.4)', 'rgba(58, 78, 72, 0.8)', 'rgba(58, 78, 72, 0.95)']}
+          style={styles.overlay}
+        >
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#F5C842" />
+          </View>
+        </LinearGradient>
+      </SafeAreaView>
+    )
+  }
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <StatusBar style="light" />
+      <LinearGradient
+        colors={['rgba(58, 78, 72, 0.4)', 'rgba(58, 78, 72, 0.8)', 'rgba(58, 78, 72, 0.95)']}
+        style={styles.overlay}
+      >
+        {/* Virsraksts */}
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => router.back()}>
+            <MaterialIcons name="arrow-back" size={28} color="#FFFFFF" />
+          </TouchableOpacity>
+          <Text style={styles.title}>Mērķi</Text>
+          <View style={{ width: 28 }} />
+        </View>
+
+        <ScrollView
+          style={styles.scrollContainer}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Svara mērķis */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Svara mērķis</Text>
+            <View style={styles.inputGroup}>
+              <View style={styles.labelRow}>
+                <Text style={styles.label}>Mērķa svars</Text>
+                <Text style={styles.unitText}>{weightUnit === 'lb' || weightUnit === 'lbs' ? 'lb' : 'kg'}</Text>
+              </View>
+              <TouchableOpacity
+                style={styles.selectButton}
+                onPress={() => setShowGoalWeightModal(true)}
+              >
+                <MaterialIcons name="scale" size={20} color="rgba(255, 255, 255, 0.7)" />
+                <Text style={styles.selectButtonText}>{formatWeight(goalWeight, weightUnit)}</Text>
+                <MaterialIcons name="expand-more" size={24} color="rgba(255, 255, 255, 0.5)" />
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Uztura mērķi */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Uztura mērķi</Text>
+            
+            <InputField
+              label="Kaloriju mērķis (kcal)"
+              icon="local-fire-department"
+              value={calorieGoal}
+              onChangeText={setCalorieGoal}
+              placeholder="Ievadiet kaloriju mērķi (piem., 2000)"
+            />
+
+            <InputField
+              label="Proteīna mērķis (g)"
+              icon="restaurant"
+              value={proteinGoal}
+              onChangeText={setProteinGoal}
+              placeholder="Ievadiet proteīna mērķi (piem., 150)"
+            />
+
+            <InputField
+              label="Tauku mērķis (g)"
+              icon="opacity"
+              value={fatGoal}
+              onChangeText={setFatGoal}
+              placeholder="Ievadiet tauku mērķi (piem., 65)"
+            />
+
+            <InputField
+              label="Ogļhidrātu mērķis (g)"
+              icon="grain"
+              value={carbGoal}
+              onChangeText={setCarbGoal}
+              placeholder="Ievadiet ogļhidrātu mērķi (piem., 225)"
+            />
+          </View>
+
+          <View style={styles.infoBox}>
+            <MaterialIcons name="info" size={18} color="#F5C842" />
+            <Text style={styles.infoText}>Atstājiet tukšu, lai neuzstādītu mērķi konkrētajam parametram</Text>
+          </View>
+        </ScrollView>
+
+        {/* Saglabāt pogu */}
+        <View style={styles.footer}>
+          <TouchableOpacity
+            style={[styles.saveButton, isSaving && styles.disabledButton]}
+            onPress={handleSave}
+            disabled={isSaving}
+          >
+            {isSaving ? (
+              <ActivityIndicator color="#2C3E50" />
+            ) : (
+              <Text style={styles.saveButtonText}>Saglabāt mērķus</Text>
+            )}
+          </TouchableOpacity>
+        </View>
+
+        <WeightPickerModal
+          visible={showGoalWeightModal}
+          unit={weightUnit}
+          weight={goalWeight}
+          onConfirm={(nextWeight) => {
+            setGoalWeight(String(nextWeight.toFixed(1)))
+            setShowGoalWeightModal(false)
+          }}
+          onClose={() => setShowGoalWeightModal(false)}
+        />
+      </LinearGradient>
+    </SafeAreaView>
+  )
+}
+
+export default EditGoalsScreen
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#3A4E48',
+  },
+  overlay: {
+    flex: 1,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  title: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  scrollContainer: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingHorizontal: 16,
+    paddingVertical: 20,
+  },
+  section: {
+    marginBottom: 32,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#F5C842',
+    marginBottom: 16,
+  },
+  inputGroup: {
+    marginBottom: 20,
+  },
+  labelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: 'rgba(255, 255, 255, 0.9)',
+    marginBottom: 8,
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(58, 78, 72, 0.6)',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  inputIcon: {
+    marginRight: 8,
+  },
+  input: {
+    flex: 1,
+    paddingVertical: 14,
+    color: '#FFFFFF',
+    fontSize: 16,
+  },
+  unitText: {
+    color: 'rgba(255, 255, 255, 0.65)',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  selectButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(58, 78, 72, 0.6)',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  selectButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    marginLeft: 8,
+    flex: 1,
+  },
+  infoBox: {
+    flexDirection: 'row',
+    backgroundColor: 'rgba(245, 200, 66, 0.1)',
+    borderRadius: 8,
+    padding: 12,
+    marginTop: 20,
+    alignItems: 'center',
+  },
+  infoText: {
+    fontSize: 13,
+    color: 'rgba(255, 255, 255, 0.7)',
+    marginLeft: 8,
+    flex: 1,
+  },
+  footer: {
+    paddingHorizontal: 16,
+    paddingBottom: 20,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  saveButton: {
+    backgroundColor: '#F5C842',
+    paddingVertical: 14,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  disabledButton: {
+    opacity: 0.6,
+  },
+  saveButtonText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#2C3E50',
+  },
+})

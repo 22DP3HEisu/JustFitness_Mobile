@@ -80,15 +80,6 @@ router.delete('/:mealId/foods/:foodId', authenticateToken, async (req, res) => {
     const { mealId, foodId } = req.params;
     const userId = req.user.userId;
 
-    const meal = await MealModel.findById(mealId);
-
-    if (!meal || meal.user_id !== userId) {
-      return res.status(404).json({
-        success: false,
-        message: 'Meal not found'
-      });
-    }
-
     await MealModel.removeFood(foodId);
 
     res.json({

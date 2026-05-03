@@ -1,99 +1,127 @@
 #!/usr/bin/env node
-/**
- * Database reset script
- * Drops all tables and recreates them with fresh structure
- */
 
 require('dotenv').config();
 const { db } = require('../lib/database');
-const UserModel = require('../lib/DbModels/userModel');
-const MuscleGroupModel = require('../lib/DbModels/muscleGroupModel');
-const ExerciseModel = require('../lib/DbModels/exerciseModel');
-const WorkoutModel = require('../lib/DbModels/workoutModel');
-const CompletedWorkoutModel = require('../lib/DbModels/completedWorkoutModel');
-const MealModel = require('../lib/DbModels/mealModel');
-const FoodModel = require('../lib/DbModels/foodModel');
+
+const Models = {
+  UserModel: require('../lib/DbModels/userModel'),
+  RefreshTokenModel: require('../lib/DbModels/refreshTokenModel'),
+  UserSettingsModel: require('../lib/DbModels/userSettingsModel'),
+  WeightHistoryModel: require('../lib/DbModels/weightHistoryModel'),
+  MuscleGroupModel: require('../lib/DbModels/muscleGroupModel'),
+  ExerciseModel: require('../lib/DbModels/exerciseModel'),
+  WorkoutModel: require('../lib/DbModels/workoutModel'),
+  WorkoutExerciseModel: require('../lib/DbModels/workoutExerciseModel'),
+  ExerciseSetModel: require('../lib/DbModels/exerciseSetModel'),
+  WorkoutLogModel: require('../lib/DbModels/workoutLogModel'),
+  ExerciseLogModel: require('../lib/DbModels/exerciseLogModel'),
+  SetLogModel: require('../lib/DbModels/SetLogModel'),
+  FoodModel: require('../lib/DbModels/foodModel'),
+  MealModel: require('../lib/DbModels/mealModel'),
+};
 
 async function resetDatabase() {
   try {
     console.log('🔧 Starting database reset...');
-    
+
     // Test connection
     console.log('📡 Testing database connection...');
     const isConnected = await db.testConnection();
-    
+
     if (!isConnected) {
-      console.error('❌ Database connection failed. Please check your configuration.');
+      console.error('❌ Database connection failed.');
       process.exit(1);
     }
-    
-    // Drop tables in reverse order of creation (respecting foreign keys)
-    console.log('⚠️  Dropping existing tables...');
-    
-    const tablesToDrop = [
-      'workout_exercises',
-      'exercise_muscle_groups',
-      'workouts',
-      'exercises',
-      'muscle_groups',
-      'users'
-    ];
 
-    for (const table of tablesToDrop) {
-      try {
-        await db.executeQuery(`DROP TABLE IF EXISTS ${table}`);
-        console.log(`✓ Dropped ${table} table`);
-      } catch (error) {
-        console.warn(`⚠️  Could not drop ${table} table:`, error.message);
+    // =========================
+    // DROP TABLES (ALL TABLES)
+    // =========================
+    console.log('⚠️ Dropping existing tables...');
+
+    // Deaktivizē ārējās atslēgas, lai varētu nolabot tabulas jebkādā secībā
+    await db.executeQuery('SET FOREIGN_KEY_CHECKS=0');
+
+    try {
+      // Iegūst visus tabulas vārdus
+      const result = await db.selectAll("SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE()");
+      
+      for (const row of result) {
+        const table = row.TABLE_NAME;
+        try {
+          await db.executeQuery(`DROP TABLE IF EXISTS ${table}`);
+          console.log(`✓ Dropped ${table}`);
+        } catch (err) {
+          console.warn(`⚠️ Could not drop ${table}:`, err.message);
+        }
+      }
+    } finally {
+      // Aktivizē ārējās atslēgas atpakaļ
+      await db.executeQuery('SET FOREIGN_KEY_CHECKS=1');
+    }
+
+    // =========================
+    // CREATE TABLES (NORMAL ORDER)
+    // =========================
+    console.log('📋 Creating fresh tables...');
+
+    for (const modelName in Models) {
+      const model = Models[modelName];
+
+      if (model?.createTable) {
+        try {
+          await model.createTable();
+          console.log(`✓ Created ${modelName.replace('Model', '')}`);
+        } catch (error) {
+          console.error(`❌ Error creating ${modelName}:`, error);
+          throw error;
+        }
       }
     }
-    
-    // Create tables in proper order
-    console.log('📋 Creating fresh tables...');
-    await UserModel.createTable();
-    await MuscleGroupModel.createTable();
-    await ExerciseModel.createTable();
-    await WorkoutModel.createTable();
-    await CompletedWorkoutModel.createTable();
-    await FoodModel.createTable();
-    await MealModel.createTable();
 
-    // Populate muscle groups
+    // =========================
+    // SEED DATA
+    // =========================
     console.log('📊 Populating muscle groups...');
+
     const muscleGroups = [
-      { name: 'Chest', description: 'Pectoral muscles including the pectoralis major and minor' },
-      { name: 'Back', description: 'Muscles of the back including the latissimus dorsi' },
-      { name: 'Shoulders', description: 'Deltoid muscles (anterior, lateral, and posterior)' },
-      { name: 'Arms', description: 'Biceps, triceps, and forearm muscles' },
-      { name: 'Triceps', description: 'The three-headed muscle at the back of the upper arm' },
-      { name: 'Biceps', description: 'The two-headed muscle at the front of the upper arm' },
-      { name: 'Forearms', description: 'Muscles of the forearm including flexors and extensors' },
-      { name: 'Core', description: 'Abdominal and lower back muscles' },
-      { name: 'Legs', description: 'Quadriceps, hamstrings, calves, and other leg muscles' },
-      { name: 'Glutes', description: 'Gluteal muscles including the gluteus maximus, medius, and minimus' }
+      { name: 'Chest', description: 'Pectoral muscles' },
+      { name: 'Lats', description: 'Latissimus dorsi' },
+      { name: 'Rhomboids', description: 'Upper back muscles' },
+      { name: 'Traps', description: 'Trapezius muscles' },
+      { name: 'Lower Back', description: 'Erector spinae' },
+      { name: 'Biceps', description: 'Front arm muscles' },
+      { name: 'Triceps', description: 'Back arm muscles' },
+      { name: 'Forearms', description: 'Lower arm muscles' },
+      { name: 'Quadriceps', description: 'Front thigh muscles' },
+      { name: 'Hamstrings', description: 'Back thigh muscles' },
+      { name: 'Calves', description: 'Lower leg muscles' },
+      { name: "Adductors", description: "Inner thigh muscles" },
+      { name: "Abductors", description: "Outer thigh muscles" },
+      { name: 'Shoulders', description: 'Deltoids' },
+      { name: 'Core', description: 'Abs & lower back' },
+      { name: 'Glutes', description: 'Glute muscles' }
     ];
+
+    const MuscleGroupModel = Models.MuscleGroupModel;
 
     for (const mg of muscleGroups) {
       try {
         await MuscleGroupModel.create(mg.name, mg.description);
         console.log(`✓ Created muscle group: ${mg.name}`);
-      } catch (error) {
-        console.warn(`⚠️  Could not create muscle group ${mg.name}:`, error.message);
+      } catch (err) {
+        console.warn(`⚠️ Could not create ${mg.name}:`, err.message);
       }
     }
-    
-    console.log('✅ Database reset completed successfully!');
-    console.log('💡 All tables have been recreated and muscle groups populated.');
-    
+
+    console.log('✅ Database reset completed!');
     process.exit(0);
-    
+
   } catch (error) {
-    console.error('❌ Database reset failed:', error);
+    console.error('❌ Reset failed:', error);
     process.exit(1);
   }
 }
 
-// Run reset if script is executed directly
 if (require.main === module) {
   resetDatabase();
 }

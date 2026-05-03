@@ -52,7 +52,7 @@ const LoginScreen = () => {
       if (response.ok && data.success) {
         console.log('Login successful for:', email)
         // Store the token and user data in context
-        await login(data.data.accessToken, data.data.user)
+        await login(data.data.accessToken, data.data.user, data.data.refreshToken)
         router.replace('/(tabs)')
       } else {
         const errorMessage = data.message || 'Invalid email or password'

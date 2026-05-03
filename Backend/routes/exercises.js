@@ -7,9 +7,9 @@ const router = express.Router();
  * GET /api/exercises
  * Get all exercises
  */
-router.get('/', async (req, res) => {
+router.get('/', authenticateToken, async (req, res) => {
   try {
-    const exercises = await ExerciseModel.findAll();
+    const exercises = await ExerciseModel.findVisibleToUser(req.user.userId);
     
     res.json({
       success: true,
@@ -29,7 +29,7 @@ router.get('/', async (req, res) => {
  * GET /api/exercises/:id
  * Get a specific exercise by ID
  */
-router.get('/:id', async (req, res) => {
+router.get('/:id', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
     
@@ -38,6 +38,13 @@ router.get('/:id', async (req, res) => {
       return res.status(404).json({
         success: false,
         message: 'Exercise not found'
+      });
+    }
+
+    if (Number(exercise.user_id) !== Number(req.user.userId) && !exercise.is_public) {
+      return res.status(403).json({
+        success: false,
+        message: 'You can only view public exercises or exercises you created'
       });
     }
 
@@ -55,6 +62,49 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+router.get('/:id/weight-history', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.userId;
+    const limit = req.query.limit || 12;
+
+    const exercise = await ExerciseModel.findById(id);
+    if (!exercise) {
+      return res.status(404).json({
+        success: false,
+        message: 'Exercise not found'
+      });
+    }
+
+    if (Number(exercise.user_id) !== Number(userId) && !exercise.is_public) {
+      return res.status(403).json({
+        success: false,
+        message: 'You can only view public exercises or exercises you created'
+      });
+    }
+
+    const history = await ExerciseModel.getTopWeightHistory(id, userId, limit);
+    res.json({
+      success: true,
+      data: history.map((entry) => ({
+        workoutLogId: entry.workout_log_id,
+        workoutId: entry.workout_id,
+        workoutName: entry.workout_name,
+        date: entry.session_date,
+        topWeight: entry.top_weight == null ? null : Number(entry.top_weight),
+        setCount: entry.set_count,
+      }))
+    });
+  } catch (error) {
+    console.error('Error fetching exercise weight history:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch exercise weight history',
+      error: error.message
+    });
+  }
+});
+
 /**
  * POST /api/exercises
  * Create a new exercise
@@ -63,7 +113,7 @@ router.get('/:id', async (req, res) => {
  */
 router.post('/', authenticateToken, async (req, res) => {
   try {
-    const { name, description, primaryMuscleGroupId, secondaryMuscleGroupIds } = req.body;
+    const { name, description, primaryMuscleGroupId, secondaryMuscleGroupIds, isPublic } = req.body;
 
     // Validate required fields
     if (!name || name.trim().length === 0) {
@@ -73,11 +123,12 @@ router.post('/', authenticateToken, async (req, res) => {
       });
     }
 
-    // Create exercise (no longer using difficulty)
+    // Izveido vingrinājumu ar lietotāja ID
     const exercise = await ExerciseModel.create(
+      req.user.userId,
       name.trim(),
       description || null,
-      null // difficulty is no longer used
+      isPublic === true
     );
 
     // Link primary muscle group if provided
@@ -135,7 +186,7 @@ router.post('/', authenticateToken, async (req, res) => {
 router.put('/:id', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, description, difficulty } = req.body;
+    const { name, description, primaryMuscleGroupId, secondaryMuscleGroupIds, isPublic } = req.body;
 
     // Check if exercise exists
     const exercise = await ExerciseModel.findById(id);
@@ -146,15 +197,36 @@ router.put('/:id', authenticateToken, async (req, res) => {
       });
     }
 
+    if (Number(exercise.user_id) !== Number(req.user.userId)) {
+      return res.status(403).json({
+        success: false,
+        message: 'You can only edit exercises you created'
+      });
+    }
+
+    if (name !== undefined && !name.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Exercise name is required'
+      });
+    }
+
     // Update exercise
     const updated = await ExerciseModel.update(id, {
-      name: name !== undefined ? name : exercise.name,
+      name: name !== undefined ? name.trim() : exercise.name,
       description: description !== undefined ? description : exercise.description,
-      difficulty: difficulty !== undefined ? difficulty : exercise.difficulty
+      isPublic: isPublic !== undefined ? isPublic === true : exercise.is_public
     });
 
     if (updated) {
-      const updatedExercise = await ExerciseModel.findById(id);
+      const shouldUpdateMuscleGroups = primaryMuscleGroupId !== undefined || secondaryMuscleGroupIds !== undefined;
+      const updatedExercise = shouldUpdateMuscleGroups
+        ? await ExerciseModel.replaceMuscleGroups(
+            id,
+            primaryMuscleGroupId || null,
+            Array.isArray(secondaryMuscleGroupIds) ? secondaryMuscleGroupIds : []
+          )
+        : await ExerciseModel.findById(id);
       res.json({
         success: true,
         message: 'Exercise updated successfully',
@@ -190,6 +262,13 @@ router.delete('/:id', authenticateToken, async (req, res) => {
       return res.status(404).json({
         success: false,
         message: 'Exercise not found'
+      });
+    }
+
+    if (Number(exercise.user_id) !== Number(req.user.userId)) {
+      return res.status(403).json({
+        success: false,
+        message: 'You can only delete exercises you created'
       });
     }
 
@@ -230,6 +309,13 @@ router.post('/:id/muscle-groups/:muscleGroupId', authenticateToken, async (req, 
       return res.status(404).json({
         success: false,
         message: 'Exercise not found'
+      });
+    }
+
+    if (Number(exercise.user_id) !== Number(req.user.userId)) {
+      return res.status(403).json({
+        success: false,
+        message: 'You can only edit exercises you created'
       });
     }
 
@@ -274,6 +360,13 @@ router.delete('/:id/muscle-groups/:muscleGroupId', authenticateToken, async (req
       return res.status(404).json({
         success: false,
         message: 'Exercise not found'
+      });
+    }
+
+    if (Number(exercise.user_id) !== Number(req.user.userId)) {
+      return res.status(403).json({
+        success: false,
+        message: 'You can only edit exercises you created'
       });
     }
 

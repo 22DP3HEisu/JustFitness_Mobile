@@ -2,10 +2,18 @@ import { StyleSheet, Text, View, ImageBackground, TouchableOpacity, Dimensions }
 import { StatusBar } from 'expo-status-bar'
 import { LinearGradient } from 'expo-linear-gradient'
 import { useRouter } from 'expo-router'
-import React from 'react'
+import React, { useEffect } from 'react'
+import { useAuth } from './_context/AuthContext'
 
 const OnboardingScreen = () => {
   const router = useRouter()
+  const { isAuthenticated, isLoading } = useAuth()
+
+  useEffect(() => {
+    if (!isLoading && isAuthenticated) {
+      router.replace('/(tabs)')
+    }
+  }, [isLoading, isAuthenticated])
 
   const handleGetStarted = () => {
     router.push('/register')

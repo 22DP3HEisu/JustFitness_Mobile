@@ -1,0 +1,35 @@
+{
+  "name": "justfitness_mobile",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "private": true,
+  "workspaces": [
+    "Frontend",
+    "Backend"
+  ],
+  "scripts": {
+    "start": "npm run start --workspaces",
+    "dev": "concurrently \"npm run start --workspace=Frontend\" \"npm run dev --workspace=Backend\"",
+    "start:frontend": "npm run start --workspace=Frontend",
+    "start:backend": "npm run start --workspace=Backend",
+    "setup": "npm run setup --workspaces"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/22DP3HEisu/JustFitness_Mobile.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/22DP3HEisu/JustFitness_Mobile/issues"
+  },
+  "homepage": "https://github.com/22DP3HEisu/JustFitness_Mobile#readme",
+  "dependencies": {
+    "@react-native-community/datetimepicker": "8.4.4",
+    "concurrently": "^9.2.1",
+    "react": "19.1.0",
+    "react-native": "0.81.5"
+  }
+}

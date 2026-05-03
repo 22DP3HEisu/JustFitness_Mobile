@@ -143,15 +143,16 @@ const CreateWorkoutScreen = () => {
     }
 
     // Build exercises array once, used for both create and update
-    const exercisesPayload = exercises.flatMap((exercise) =>
-      exercise.sets.map((set, i) => ({
-        exerciseId: exercise.id,
-        setNumber: i + 1,
+    const exercisesPayload = exercises.map((exercise, index) => ({
+      exercise_id: exercise.id,
+      order_index: index,
+      sets: exercise.sets.map((set, i) => ({
+        set_number: i + 1,
         reps: parseInt(set.reps) || 0,
         weight: set.weight ? parseFloat(set.weight) : null,
-        weightUnit: 'kg',
+        weight_unit: 'kg',
       }))
-    )
+    }))
 
     setIsLoading(true)
     try {
