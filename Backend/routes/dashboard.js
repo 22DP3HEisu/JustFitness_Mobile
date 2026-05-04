@@ -114,8 +114,6 @@ router.get('/', authenticateToken, async (req, res) => {
       safely([], () => WeightHistoryModel.findByPeriod(userId, weightPeriod)),
     ]);
 
-    console.log(weightHistory);
-
     const foods = meals.flatMap((meal) => meal.foods || []);
     const caloriesFromMeals = foods.reduce((sum, food) => sum + getFoodCalories(food), 0);
     const protein = foods.reduce((sum, food) => sum + getFoodMacro(food, 'protein_per_100g'), 0);
@@ -149,7 +147,7 @@ router.get('/', authenticateToken, async (req, res) => {
           fat: macroGoalTotal ? round((fatGoalGrams / macroGoalTotal) * 100) : DEFAULTS.fatGoal,
           carbs: macroGoalTotal ? round((carbGoalGrams / macroGoalTotal) * 100) : DEFAULTS.carbGoal,
           weight: settings?.goal_weight ? toNumber(settings.goal_weight) : null,
-          steps: DEFAULTS.stepGoal,
+          steps: toNumber(settings?.step_goal, DEFAULTS.stepGoal),
         },
         nutrition: {
           meals,
@@ -179,7 +177,7 @@ router.get('/', authenticateToken, async (req, res) => {
         },
         steps: {
           today: 0,
-          goal: DEFAULTS.stepGoal,
+          goal: toNumber(settings?.step_goal, DEFAULTS.stepGoal),
         },
         weight: {
           period: weightPeriod,

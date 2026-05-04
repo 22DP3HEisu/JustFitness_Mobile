@@ -87,6 +87,49 @@ router.get('/', authenticateToken, async (req, res) => {
 });
 
 /**
+ * GET /api/workouts/:id/details
+ * Get workout details with recent completed session volume
+ */
+router.get('/:id/details', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.userId;
+
+    const workout = await WorkoutModel.findById(id);
+    if (!workout) {
+      return res.status(404).json({
+        success: false,
+        message: 'Workout not found'
+      });
+    }
+
+    if (Number(workout.user_id) !== Number(userId)) {
+      return res.status(403).json({
+        success: false,
+        message: 'You do not have permission to view this workout'
+      });
+    }
+
+    const recentSessions = await workoutLogModel.findCompletedByWorkoutId(userId, id, 8);
+
+    res.json({
+      success: true,
+      data: {
+        workout,
+        recentSessions: recentSessions.reverse()
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching workout details:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch workout details',
+      error: error.message
+    });
+  }
+});
+
+/**
  * GET /api/workouts/:id
  * Get a specific workout by ID
  */
@@ -148,7 +191,7 @@ router.post('/', authenticateToken, async (req, res) => {
     const workout = await WorkoutModel.create(
       userId,
       name.trim(),
-      description || null,
+      description || null
     );
 
     // Ja vingrinājumi ir padoti, pievienojam tos vienā reizē
@@ -1098,189 +1141,6 @@ router.delete('/session/:sessionId', authenticateToken, async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Failed to cancel workout',
-      error: error.message
-    });
-  }
-});
-
-// ==================== COMPLETED WORKOUTS ROUTES ====================
-
-/**
- * GET /api/workouts/completed/latest
- * Get the latest completed workouts for the authenticated user
- */
-router.get('/completed/latest', authenticateToken, async (req, res) => {
-  try {
-    const userId = req.user.userId;
-    const limit = parseInt(req.query.limit) || 10;
-    
-    const completedWorkouts = await CompletedWorkoutModel.getLatestByUserId(userId, limit);
-    
-    res.json({
-      success: true,
-      data: completedWorkouts
-    });
-  } catch (error) {
-    console.error('Error fetching latest completed workouts:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to fetch latest completed workouts',
-      error: error.message
-    });
-  }
-});
-
-/**
- * GET /api/workouts/completed/stats
- * Get workout statistics for the authenticated user
- */
-router.get('/completed/stats', authenticateToken, async (req, res) => {
-  try {
-    const userId = req.user.userId;
-    
-    const stats = await CompletedWorkoutModel.getStatsByUserId(userId);
-    
-    res.json({
-      success: true,
-      data: stats
-    });
-  } catch (error) {
-    console.error('Error fetching workout stats:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to fetch workout stats',
-      error: error.message
-    });
-  }
-});
-
-/**
- * GET /api/workouts/completed
- * Get all completed workouts for the authenticated user with pagination
- */
-router.get('/completed', authenticateToken, async (req, res) => {
-  try {
-    const userId = req.user.userId;
-    const limit = parseInt(req.query.limit) || 50;
-    const offset = parseInt(req.query.offset) || 0;
-    
-    const completedWorkouts = await CompletedWorkoutModel.findByUserId(userId, limit, offset);
-    const totalCount = await CompletedWorkoutModel.getCountByUserId(userId);
-    
-    res.json({
-      success: true,
-      data: completedWorkouts,
-      pagination: {
-        total: totalCount,
-        limit,
-        offset
-      }
-    });
-  } catch (error) {
-    console.error('Error fetching completed workouts:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to fetch completed workouts',
-      error: error.message
-    });
-  }
-});
-
-/**
- * POST /api/workouts/completed
- * Record a completed workout
- * Required fields: workoutId
- * Optional fields: durationMinutes, caloriesBurned, notes, rating
- */
-router.post('/completed', authenticateToken, async (req, res) => {
-  try {
-    const userId = req.user.userId;
-    const { workoutId, durationMinutes, caloriesBurned, notes, rating } = req.body;
-
-    // Validate required fields
-    if (!workoutId) {
-      return res.status(400).json({
-        success: false,
-        message: 'Workout ID is required'
-      });
-    }
-
-    // Verify the workout exists
-    const workout = await WorkoutModel.findById(workoutId);
-    if (!workout) {
-      return res.status(404).json({
-        success: false,
-        message: 'Workout not found'
-      });
-    }
-
-    // Record the completed workout
-    const completedWorkout = await CompletedWorkoutModel.create(
-      userId,
-      workoutId,
-      durationMinutes || null,
-      caloriesBurned || null,
-      notes || null,
-      rating || null
-    );
-
-    res.status(201).json({
-      success: true,
-      message: 'Workout completion recorded successfully',
-      data: completedWorkout
-    });
-  } catch (error) {
-    console.error('Error recording completed workout:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to record completed workout',
-      error: error.message
-    });
-  }
-});
-
-/**
- * DELETE /api/workouts/completed/:id
- * Delete a completed workout record
- */
-router.delete('/completed/:id', authenticateToken, async (req, res) => {
-  try {
-    const { id } = req.params;
-    const userId = req.user.userId;
-
-    // Verify the completed workout exists and belongs to the user
-    const completedWorkout = await CompletedWorkoutModel.findById(id);
-    if (!completedWorkout) {
-      return res.status(404).json({
-        success: false,
-        message: 'Completed workout record not found'
-      });
-    }
-
-    if (completedWorkout.user_id !== userId) {
-      return res.status(403).json({
-        success: false,
-        message: 'You do not have permission to delete this record'
-      });
-    }
-
-    const deleted = await CompletedWorkoutModel.delete(id);
-    if (deleted) {
-      res.json({
-        success: true,
-        message: 'Completed workout record deleted successfully'
-      });
-    } else {
-      res.status(500).json({
-        success: false,
-        message: 'Failed to delete completed workout record'
-      });
-    }
-  } catch (error) {
-    console.error('Error deleting completed workout:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to delete completed workout record',
       error: error.message
     });
   }

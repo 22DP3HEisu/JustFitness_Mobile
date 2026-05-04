@@ -1,7 +1,13 @@
 const express = require('express');
 const { authenticateToken } = require('../lib/auth');
 const FoodModel = require('../lib/DbModels/foodModel');
+const UserModel = require('../lib/DbModels/userModel');
 const router = express.Router();
+
+const isAdminRequest = async (req) => {
+  const user = await UserModel.findById(req.user.userId);
+  return user?.role === 'admin';
+};
 
 router.get('/', authenticateToken, async (req, res) => {
   try {
@@ -33,7 +39,9 @@ router.get('/:id', authenticateToken, async (req, res) => {
       });
     }
 
-    if (Number(food.user_id) !== Number(req.user.userId) && !food.is_public) {
+    const isAdmin = await isAdminRequest(req);
+
+    if (!isAdmin && Number(food.user_id) !== Number(req.user.userId) && !food.is_public) {
       return res.status(403).json({
         success: false,
         message: 'You can only view public foods or foods you created'
@@ -122,7 +130,9 @@ router.put('/:id', authenticateToken, async (req, res) => {
       });
     }
 
-    if (Number(food.user_id) !== Number(req.user.userId)) {
+    const isAdmin = await isAdminRequest(req);
+
+    if (!isAdmin && Number(food.user_id) !== Number(req.user.userId)) {
       return res.status(403).json({
         success: false,
         message: 'You can only edit foods you created'
@@ -189,6 +199,49 @@ router.put('/:id', authenticateToken, async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Failed to update food',
+      error: error.message
+    });
+  }
+});
+
+router.delete('/:id', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const food = await FoodModel.findById(id);
+
+    if (!food) {
+      return res.status(404).json({
+        success: false,
+        message: 'Food not found'
+      });
+    }
+
+    const isAdmin = await isAdminRequest(req);
+
+    if (!isAdmin && Number(food.user_id) !== Number(req.user.userId)) {
+      return res.status(403).json({
+        success: false,
+        message: 'You can only delete foods you created'
+      });
+    }
+
+    const deleted = await FoodModel.delete(id);
+    if (!deleted) {
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to delete food'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Food deleted successfully'
+    });
+  } catch (error) {
+    console.error('Error deleting food:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to delete food',
       error: error.message
     });
   }

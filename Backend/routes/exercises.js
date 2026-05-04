@@ -1,7 +1,13 @@
 const express = require('express');
 const { authenticateToken } = require('../lib/auth');
 const ExerciseModel = require('../lib/DbModels/exerciseModel');
+const UserModel = require('../lib/DbModels/userModel');
 const router = express.Router();
+
+const isAdminRequest = async (req) => {
+  const user = await UserModel.findById(req.user.userId);
+  return user?.role === 'admin';
+};
 
 /**
  * GET /api/exercises
@@ -41,7 +47,9 @@ router.get('/:id', authenticateToken, async (req, res) => {
       });
     }
 
-    if (Number(exercise.user_id) !== Number(req.user.userId) && !exercise.is_public) {
+    const isAdmin = await isAdminRequest(req);
+
+    if (!isAdmin && Number(exercise.user_id) !== Number(req.user.userId) && !exercise.is_public) {
       return res.status(403).json({
         success: false,
         message: 'You can only view public exercises or exercises you created'
@@ -76,7 +84,9 @@ router.get('/:id/weight-history', authenticateToken, async (req, res) => {
       });
     }
 
-    if (Number(exercise.user_id) !== Number(userId) && !exercise.is_public) {
+    const isAdmin = await isAdminRequest(req);
+
+    if (!isAdmin && Number(exercise.user_id) !== Number(userId) && !exercise.is_public) {
       return res.status(403).json({
         success: false,
         message: 'You can only view public exercises or exercises you created'
@@ -197,7 +207,9 @@ router.put('/:id', authenticateToken, async (req, res) => {
       });
     }
 
-    if (Number(exercise.user_id) !== Number(req.user.userId)) {
+    const isAdmin = await isAdminRequest(req);
+
+    if (!isAdmin && Number(exercise.user_id) !== Number(req.user.userId)) {
       return res.status(403).json({
         success: false,
         message: 'You can only edit exercises you created'
@@ -265,7 +277,9 @@ router.delete('/:id', authenticateToken, async (req, res) => {
       });
     }
 
-    if (Number(exercise.user_id) !== Number(req.user.userId)) {
+    const isAdmin = await isAdminRequest(req);
+
+    if (!isAdmin && Number(exercise.user_id) !== Number(req.user.userId)) {
       return res.status(403).json({
         success: false,
         message: 'You can only delete exercises you created'

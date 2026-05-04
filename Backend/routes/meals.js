@@ -6,7 +6,7 @@ const router = express.Router();
 router.get('/', authenticateToken, async (req, res) => {
   try {
     const userId = req.user.userId;
-    const meals = await MealModel.findByUserId(userId);
+    const meals = await MealModel.findByUserId(userId, req.query.date || null);
     
     res.json({
       success: true,
@@ -26,7 +26,7 @@ router.get('/', authenticateToken, async (req, res) => {
 router.post('/:mealType/foods', authenticateToken, async (req, res) => {
   try {
     const { mealType } = req.params;
-    const { foods } = req.body; 
+    const { foods, date } = req.body; 
     const userId = req.user.userId;
 
     if (!Array.isArray(foods) || foods.length === 0) {
@@ -37,18 +37,18 @@ router.post('/:mealType/foods', authenticateToken, async (req, res) => {
     }
 
     // Get today's date
-    const today = new Date().toISOString().split('T')[0];
+    const selectedDate = date || new Date().toISOString().split('T')[0];
 
     // Find or create meal
     let mealId = null;
-    const existingMeals = await MealModel.findByUserId(userId);
+    const existingMeals = await MealModel.findByUserId(userId, selectedDate);
     const existingMeal = existingMeals.find(m => m.name === mealType);
 
     if (existingMeal) {
       mealId = existingMeal.id;
     } else {
       // Create new meal if it doesn't exist
-      const newMeal = await MealModel.createMeal(userId, mealType, today);
+      const newMeal = await MealModel.createMeal(userId, mealType, selectedDate);
       mealId = newMeal.id;
     }
 

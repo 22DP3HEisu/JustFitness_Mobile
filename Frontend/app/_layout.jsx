@@ -1,10 +1,9 @@
-import { Stack, Tabs } from 'expo-router';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import 'react-native-gesture-handler';
+import { Stack } from 'expo-router';
 import { useFonts, RussoOne_400Regular } from '@expo-google-fonts/russo-one'
 import { useEffect } from 'react';
 import * as SplashScreen from 'expo-splash-screen';
-import { Ionicons } from '@expo/vector-icons';
-import { View, StyleSheet } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { AuthProvider } from './_context/AuthContext';
 import { SelectionProvider } from './_context/SelectionContext';
 
@@ -31,6 +30,7 @@ export default function RootLayout() {
     }
     
     return (
+        <GestureHandlerRootView style={{ flex: 1 }}>
         <AuthProvider>
         <SelectionProvider>
             <Stack
@@ -82,6 +82,12 @@ export default function RootLayout() {
                     }} 
                 />
                 <Stack.Screen 
+                    name="exercises" 
+                    options={{ 
+                        presentation: 'card',
+                    }} 
+                />
+                <Stack.Screen 
                     name="exercise-details" 
                     options={{ 
                         presentation: 'fullScreenModal',
@@ -91,6 +97,30 @@ export default function RootLayout() {
                     name="food-details" 
                     options={{ 
                         presentation: 'fullScreenModal',
+                    }} 
+                />
+                <Stack.Screen 
+                    name="foods" 
+                    options={{ 
+                        presentation: 'card',
+                    }} 
+                />
+                <Stack.Screen 
+                    name="muscle-groups" 
+                    options={{ 
+                        presentation: 'card',
+                    }} 
+                />
+                <Stack.Screen 
+                    name="admin-users" 
+                    options={{ 
+                        presentation: 'card',
+                    }} 
+                />
+                <Stack.Screen 
+                    name="admin-user-details" 
+                    options={{ 
+                        presentation: 'card',
                     }} 
                 />
                 <Stack.Screen 
@@ -112,6 +142,12 @@ export default function RootLayout() {
                     options={{ 
                         presentation: 'fullScreenModal',
                         gestureEnabled: true,
+                    }} 
+                />
+                <Stack.Screen 
+                    name="workout-details" 
+                    options={{ 
+                        presentation: 'card',
                     }} 
                 />
                 <Stack.Screen 
@@ -147,5 +183,6 @@ export default function RootLayout() {
             </Stack>
         </SelectionProvider>
         </AuthProvider>
+        </GestureHandlerRootView>
     );
 }

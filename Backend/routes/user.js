@@ -241,7 +241,8 @@ router.put("/settings", authenticateToken, async (req, res) => {
       calorieGoal,
       proteinGoal,
       fatGoal,
-      carbGoal
+      carbGoal,
+      stepGoal
     } = req.body;
 
     const settings = await UserSettingsModel.findByUserId(userId);
@@ -264,6 +265,7 @@ router.put("/settings", authenticateToken, async (req, res) => {
     if (hasOwn(req.body, 'proteinGoal')) updates.proteinGoal = proteinGoal;
     if (hasOwn(req.body, 'fatGoal')) updates.fatGoal = fatGoal;
     if (hasOwn(req.body, 'carbGoal')) updates.carbGoal = carbGoal;
+    if (hasOwn(req.body, 'stepGoal')) updates.stepGoal = stepGoal;
 
     if (hasOwn(req.body, 'height')) {
       // Konvertē augumu uz cm pirms glabāšanas

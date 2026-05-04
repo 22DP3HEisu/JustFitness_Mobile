@@ -12,9 +12,15 @@ var exercises = require('./routes/exercises');
 var workouts = require('./routes/workouts');
 var muscleGroups = require('./routes/muscleGroups');
 var meals = require('./routes/meals');
+var nutrition = require('./routes/nutrition');
 var foods = require('./routes/foods');
 var dashboard = require('./routes/dashboard');
 var user = require('./routes/user');
+var admin = require('./routes/admin');
+var water = require('./routes/water');
+var UserModel = require('./lib/DbModels/userModel');
+var UserSettingsModel = require('./lib/DbModels/userSettingsModel');
+var WaterLogModel = require('./lib/DbModels/waterLogModel');
 
 var app = express();
 
@@ -45,8 +51,11 @@ app.use('/api/exercises', exercises);
 app.use('/api/workouts', workouts);
 app.use('/api/muscle-groups', muscleGroups);
 app.use('/api/meals', meals);
+app.use('/api/nutrition', nutrition);
 app.use('/api/foods', foods);
 app.use('/api/dashboard', dashboard);
+app.use('/api/admin', admin);
+app.use('/api/water', water);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

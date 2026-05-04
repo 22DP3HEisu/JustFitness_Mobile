@@ -18,6 +18,7 @@ class UserModel {
         email VARCHAR(255) UNIQUE NOT NULL,
         password VARCHAR(255) NOT NULL,
         name VARCHAR(255) NOT NULL,
+        role ENUM('user', 'admin') NOT NULL DEFAULT 'user',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         last_login TIMESTAMP NULL,
         is_active BOOLEAN DEFAULT TRUE,
@@ -27,11 +28,30 @@ class UserModel {
     
     try {
       await db.executeQuery(createTableSQL);
+      await this.ensureRoleColumn();
       console.log('✅ Users table created successfully');
       return true;
     } catch (error) {
       console.error('❌ Error creating users table:', error);
       throw error;
+    }
+  }
+
+  static async ensureRoleColumn() {
+    const column = await db.selectOne(`
+      SELECT COLUMN_NAME
+      FROM INFORMATION_SCHEMA.COLUMNS
+      WHERE TABLE_SCHEMA = DATABASE()
+        AND TABLE_NAME = 'users'
+        AND COLUMN_NAME = 'role'
+    `);
+
+    if (!column) {
+      await db.executeQuery(`
+        ALTER TABLE users
+        ADD COLUMN role ENUM('user', 'admin') NOT NULL DEFAULT 'user'
+        AFTER name
+      `);
     }
   }
 
@@ -69,7 +89,7 @@ class UserModel {
    */
   static async findByEmail(email) {
     const sql = `
-      SELECT id, email, password, name, created_at, last_login, is_active
+      SELECT id, email, password, name, role, created_at, last_login, is_active
       FROM users 
       WHERE email = ? AND is_active = TRUE
     `;
@@ -88,8 +108,8 @@ class UserModel {
    */
   static async findById(id, includePassword = false) {
     const fields = includePassword 
-      ? 'id, email, password, name, created_at, last_login, is_active'
-      : 'id, email, name, created_at, last_login, is_active';
+      ? 'id, email, password, name, role, created_at, last_login, is_active'
+      : 'id, email, name, role, created_at, last_login, is_active';
     
     const sql = `
       SELECT ${fields}
@@ -102,6 +122,36 @@ class UserModel {
       return user;
     } catch (error) {
       console.error('❌ Error finding user by ID:', error);
+      throw error;
+    }
+  }
+
+  static async findByIdForAdmin(id) {
+    const sql = `
+      SELECT id, email, name, role, created_at, last_login, is_active
+      FROM users 
+      WHERE id = ?
+    `;
+
+    try {
+      return await db.selectOne(sql, [id]);
+    } catch (error) {
+      console.error('âŒ Error finding user by ID for admin:', error);
+      throw error;
+    }
+  }
+
+  static async findByEmailIncludingInactive(email) {
+    const sql = `
+      SELECT id, email, password, name, role, created_at, last_login, is_active
+      FROM users 
+      WHERE email = ?
+    `;
+
+    try {
+      return await db.selectOne(sql, [email.toLowerCase()]);
+    } catch (error) {
+      console.error('âŒ Error finding user by email including inactive:', error);
       throw error;
     }
   }
@@ -130,9 +180,8 @@ class UserModel {
    */
   static async findAll(limit = 100, offset = 0) {
     const sql = `
-      SELECT id, email, name, created_at, last_login, is_active
+      SELECT id, email, name, role, created_at, last_login, is_active
       FROM users 
-      WHERE is_active = TRUE
       ORDER BY created_at DESC
       LIMIT ${parseInt(limit)} OFFSET ${parseInt(offset)}
     `;
@@ -180,17 +229,37 @@ class UserModel {
     }
   }
 
+  static async reactivate(userId) {
+    const sql = `
+      UPDATE users 
+      SET is_active = TRUE 
+      WHERE id = ?
+    `;
+
+    try {
+      const rowsAffected = await db.update(sql, [userId]);
+      return rowsAffected > 0;
+    } catch (error) {
+      console.error('âŒ Error reactivating user:', error);
+      throw error;
+    }
+  }
+
   /**
    * Atjaunina lietotāja profila informāciju
    */
   static async updateProfile(userId, updates) {
     // Atļautie lauki, ko var atjaunināt
-    const allowedFields = ['name', 'email'];
+    const allowedFields = ['name', 'email', 'role'];
     const updateFields = [];
     const params = [];
     
     for (const [field, value] of Object.entries(updates)) {
       if (allowedFields.includes(field) && value !== undefined) {
+        if (field === 'role' && !['user', 'admin'].includes(value)) {
+          throw new Error('Invalid role');
+        }
+
         updateFields.push(`${field} = ?`);
         params.push(field === 'email' ? value.toLowerCase() : value);
       }
@@ -203,14 +272,14 @@ class UserModel {
     const sql = `
       UPDATE users 
       SET ${updateFields.join(', ')}
-      WHERE id = ? AND is_active = TRUE
+      WHERE id = ?
     `;
     
     try {
       const updateParams = [...params, userId];
       const rowsAffected = await db.update(sql, updateParams);
       if (rowsAffected > 0) {
-        return await this.findById(userId);
+        return await this.findByIdForAdmin(userId);
       }
       return null;
     } catch (error) {

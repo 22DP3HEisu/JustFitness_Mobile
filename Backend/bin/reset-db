@@ -18,6 +18,7 @@ const Models = {
   SetLogModel: require('../lib/DbModels/SetLogModel'),
   FoodModel: require('../lib/DbModels/foodModel'),
   MealModel: require('../lib/DbModels/mealModel'),
+  WaterLogModel: require('../lib/DbModels/waterLogModel'),
 };
 
 async function resetDatabase() {

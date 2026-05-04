@@ -82,6 +82,30 @@ class WorkoutLogModel {
   /**
    * Atrod nepābeigu treniņu sesiju
    */
+  static async findCompletedByWorkoutId(userId, workoutId, limit = 8) {
+    const safeLimit = Math.max(1, Math.min(parseInt(limit, 10) || 8, 20));
+    const sql = `
+      SELECT
+        wl.id,
+        wl.started_at,
+        wl.completed_at,
+        COUNT(DISTINCT el.id) AS exercise_count,
+        COUNT(sl.id) AS set_count,
+        COALESCE(SUM(COALESCE(sl.weight, 0) * COALESCE(sl.reps, 0)), 0) AS total_volume
+      FROM workout_logs wl
+      LEFT JOIN exercise_logs el ON el.workout_log_id = wl.id
+      LEFT JOIN set_logs sl ON sl.exercise_log_id = el.id
+      WHERE wl.user_id = ?
+        AND wl.workout_id = ?
+        AND wl.completed_at IS NOT NULL
+      GROUP BY wl.id, wl.started_at, wl.completed_at
+      ORDER BY wl.completed_at DESC
+      LIMIT ${safeLimit}
+    `;
+
+    return await db.selectAll(sql, [userId, workoutId]);
+  }
+
   static async getOngoing(userId) {
     const sql = `
       SELECT *

@@ -27,6 +27,7 @@ class UserSettingsModel {
         protein_goal DECIMAL(10,2),
         fat_goal DECIMAL(10,2),
         carb_goal DECIMAL(10,2),
+        step_goal INT DEFAULT 10000,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
@@ -36,11 +37,30 @@ class UserSettingsModel {
 
     try {
       await db.executeQuery(createTableSQL);
+      await this.ensureStepGoalColumn();
       console.log('✅ User settings table created successfully');
       return true;
     } catch (error) {
       console.error('❌ Error creating user settings table:', error);
       throw error;
+    }
+  }
+
+  static async ensureStepGoalColumn() {
+    const column = await db.selectOne(`
+      SELECT COLUMN_NAME
+      FROM INFORMATION_SCHEMA.COLUMNS
+      WHERE TABLE_SCHEMA = DATABASE()
+        AND TABLE_NAME = 'user_settings'
+        AND COLUMN_NAME = 'step_goal'
+    `);
+
+    if (!column) {
+      await db.executeQuery(`
+        ALTER TABLE user_settings
+        ADD COLUMN step_goal INT DEFAULT 10000
+        AFTER carb_goal
+      `);
     }
   }
 
@@ -60,15 +80,16 @@ class UserSettingsModel {
       calorieGoal = null,
       proteinGoal = null,
       fatGoal = null,
-      carbGoal = null
+      carbGoal = null,
+      stepGoal = 10000
     } = settings;
 
     const sql = `
-      INSERT INTO user_settings (user_id, language, gender, birth_date, height, weight_unit, height_unit, distance_unit, goal_weight, calorie_goal, protein_goal, fat_goal, carb_goal)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO user_settings (user_id, language, gender, birth_date, height, weight_unit, height_unit, distance_unit, goal_weight, calorie_goal, protein_goal, fat_goal, carb_goal, step_goal)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
-    const params = [userId, language, gender, birthDate, height, weightUnit, heightUnit, distanceUnit, goalWeight, calorieGoal, proteinGoal, fatGoal, carbGoal];
+    const params = [userId, language, gender, birthDate, height, weightUnit, heightUnit, distanceUnit, goalWeight, calorieGoal, proteinGoal, fatGoal, carbGoal, stepGoal];
 
     try {
       const result = await db.insert(sql, params);
@@ -84,7 +105,7 @@ class UserSettingsModel {
    */
   static async findByUserId(userId) {
     const sql = `
-      SELECT id, user_id, language, gender, birth_date, height, weight_unit, height_unit, distance_unit, goal_weight, calorie_goal, protein_goal, fat_goal, carb_goal, created_at, updated_at
+      SELECT id, user_id, language, gender, birth_date, height, weight_unit, height_unit, distance_unit, goal_weight, calorie_goal, protein_goal, fat_goal, carb_goal, step_goal, created_at, updated_at
       FROM user_settings
       WHERE user_id = ?
     `;
@@ -102,7 +123,7 @@ class UserSettingsModel {
    */
   static async findById(id) {
     const sql = `
-      SELECT id, user_id, language, gender, birth_date, height, weight_unit, height_unit, distance_unit, goal_weight, calorie_goal, protein_goal, fat_goal, carb_goal, created_at, updated_at
+      SELECT id, user_id, language, gender, birth_date, height, weight_unit, height_unit, distance_unit, goal_weight, calorie_goal, protein_goal, fat_goal, carb_goal, step_goal, created_at, updated_at
       FROM user_settings
       WHERE id = ?
     `;
@@ -120,7 +141,7 @@ class UserSettingsModel {
    */
   static async update(userId, updates) {
     // Atļautie lauki, ko var atjaunināt
-    const allowedFields = ['language', 'gender', 'birth_date', 'height', 'weight_unit', 'height_unit', 'distance_unit', 'goal_weight', 'calorie_goal', 'protein_goal', 'fat_goal', 'carb_goal'];
+    const allowedFields = ['language', 'gender', 'birth_date', 'height', 'weight_unit', 'height_unit', 'distance_unit', 'goal_weight', 'calorie_goal', 'protein_goal', 'fat_goal', 'carb_goal', 'step_goal'];
     const updateFields = [];
     const params = [];
 

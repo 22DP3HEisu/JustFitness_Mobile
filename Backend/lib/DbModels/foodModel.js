@@ -97,6 +97,22 @@ class FoodModel {
     }
   }
 
+  static async findByUserId(userId) {
+    const sql = `
+      SELECT id, user_id, name, calories_per_100g, protein_per_100g, carbs_per_100g, fat_per_100g, is_public
+      FROM foods
+      WHERE user_id = ?
+      ORDER BY name ASC
+    `;
+
+    try {
+      return await db.selectAll(sql, [userId]);
+    } catch (error) {
+      console.error('âŒ Error finding foods by user ID:', error);
+      throw error;
+    }
+  }
+
   /**
    * Atrod pārtikas produktu pēc ID
    */
@@ -150,6 +166,18 @@ class FoodModel {
       return result > 0;
     } catch (error) {
       console.error('❌ Error updating food:', error);
+      throw error;
+    }
+  }
+
+  static async delete(id) {
+    const sql = `DELETE FROM foods WHERE id = ?`;
+
+    try {
+      const rowsAffected = await db.update(sql, [id]);
+      return rowsAffected > 0;
+    } catch (error) {
+      console.error('âŒ Error deleting food:', error);
       throw error;
     }
   }

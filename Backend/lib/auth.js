@@ -1,6 +1,7 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const RefreshTokenModel = require('./DbModels/refreshTokenModel');
+const UserModel = require('./DbModels/userModel');
 
 /**
  * Authentication utility functions
@@ -157,7 +158,7 @@ const authenticateToken = (req, res, next) => {
     });
   }
 
-  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+  jwt.verify(token, process.env.JWT_SECRET, async (err, decoded) => {
     if (err) {
       return res.status(403).json({ 
         success: false, 
@@ -172,9 +173,26 @@ const authenticateToken = (req, res, next) => {
         message: 'Invalid token type' 
       });
     }
-    
-    req.user = decoded;
-    next();
+
+    try {
+      const currentUser = await UserModel.findById(decoded.userId);
+      if (!currentUser) {
+        return res.status(403).json({
+          success: false,
+          message: 'Account is inactive'
+        });
+      }
+
+      req.user = decoded;
+      req.currentUser = currentUser;
+      next();
+    } catch (error) {
+      console.error('Token account verification error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to verify account'
+      });
+    }
   });
 };
 
@@ -188,18 +206,50 @@ const optionalAuth = (req, res, next) => {
     return next();
   }
 
-  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+  jwt.verify(token, process.env.JWT_SECRET, async (err, decoded) => {
     if (err || decoded.type !== 'access') {
       req.user = null;
-    } else {
-      req.user = decoded;
+      return next();
     }
+
+    try {
+      const currentUser = await UserModel.findById(decoded.userId);
+      req.user = currentUser ? decoded : null;
+      req.currentUser = currentUser || null;
+    } catch (error) {
+      req.user = null;
+      req.currentUser = null;
+    }
+
     next();
   });
+};
+
+const requireAdmin = async (req, res, next) => {
+  try {
+    const currentUser = await UserModel.findById(req.user.userId);
+
+    if (!currentUser || currentUser.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Admin access required'
+      });
+    }
+
+    req.currentUser = currentUser;
+    next();
+  } catch (error) {
+    console.error('Admin authorization error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to verify admin access'
+    });
+  }
 };
 
 module.exports = {
   AuthService,
   authenticateToken,
-  optionalAuth
+  optionalAuth,
+  requireAdmin
 };

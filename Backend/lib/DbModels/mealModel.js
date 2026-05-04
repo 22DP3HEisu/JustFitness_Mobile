@@ -100,17 +100,17 @@ class MealModel {
     /**
      * Atrod visus lietotāja ēdienus tieši tajā dienā, ar uzņemātiem produktiem
      */
-    static async findByUserId(userId) {
+    static async findByUserId(userId, mealDate = null) {
         const sql = `
         SELECT m.id, m.user_id, m.name, m.meal_date, m.created_at, m.updated_at
         FROM meals m
         WHERE m.user_id = ?
-        AND m.meal_date = CURDATE()
+        AND m.meal_date = COALESCE(?, CURDATE())
         ORDER BY m.meal_date DESC, m.created_at DESC
         `;
 
         try {
-            const meals = await db.selectAll(sql, [userId]);
+            const meals = await db.selectAll(sql, [userId, mealDate]);
             for (const meal of meals) {
                 meal.foods = await this.getFoods(meal.id);
             }

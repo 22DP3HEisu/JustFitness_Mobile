@@ -19,7 +19,6 @@ class WorkoutModel {
         user_id INT NOT NULL,
         name VARCHAR(150) NOT NULL,
         description TEXT,
-        is_public BOOLEAN DEFAULT FALSE,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
@@ -34,27 +33,27 @@ class WorkoutModel {
   /**
    * Izveido jaunu trēniņu
    */
-  static async create(userId, name, description = null, isPublic = false) {
+  static async create(userId, name, description = null) {
     const sql = `
-      INSERT INTO workouts (user_id, name, description, is_public)
-      VALUES (?, ?, ?, ?)
+      INSERT INTO workouts (user_id, name, description)
+      VALUES (?, ?, ?)
     `;
 
-    const result = await db.insert(sql, [userId, name, description, isPublic]);
+    const result = await db.insert(sql, [userId, name, description]);
     return this.findById(result.insertId);
   }
 
   /**
    * Atjaunina trēniņu
    */
-  static async update(id, name, description, isPublic) {
+  static async update(id, name, description) {
     const sql = `
       UPDATE workouts
-      SET name = ?, description = ?, is_public = ?, updated_at = CURRENT_TIMESTAMP
+      SET name = ?, description = ?, updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
     `;
 
-    const result = await db.update(sql, [name, description, isPublic, id]);
+    const result = await db.update(sql, [name, description, id]);
     return result > 0;
   }
 

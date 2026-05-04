@@ -1,163 +1,139 @@
-import { StyleSheet, Text, View, SafeAreaView, TouchableOpacity, Alert, ScrollView, ActivityIndicator } from 'react-native'
-import { StatusBar } from 'expo-status-bar'
-import { LinearGradient } from 'expo-linear-gradient'
-import { useRouter } from 'expo-router'
-import { MaterialIcons } from '@expo/vector-icons'
-import { useAuth } from './_context/AuthContext'
-import { useState, useEffect } from 'react'
-
+import { StyleSheet, Text, View, SafeAreaView, TouchableOpacity, Alert, ScrollView, ActivityIndicator } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
+import { MaterialIcons } from '@expo/vector-icons';
+import { useAuth } from './_context/AuthContext';
+import { useState, useEffect } from 'react';
+import i18n from '../lib/i18n';
 const EditLanguageScreen = () => {
-  const router = useRouter()
-  const { user, authFetch } = useAuth()
-  const [language, setLanguage] = useState('en')
-  const [isLoading, setIsLoading] = useState(true)
-  const [isSaving, setIsSaving] = useState(false)
-
-  const languages = [
-    { label: 'English', value: 'en', flag: '🇬🇧' },
-    { label: 'Latviešu', value: 'lv', flag: '🇱🇻' },
-    { label: 'Русский', value: 'ru', flag: '🇷🇺' }
-  ]
-
+  const router = useRouter();
+  const {
+    user,
+    locale,
+    authFetch,
+    updateUserSettings
+  } = useAuth();
+  const [language, setLanguage] = useState(locale || 'en');
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const languages = [{
+    label: i18n.t("ui.english"),
+    value: 'en',
+    flag: 'GB'
+  }, {
+    label: i18n.t("ui.latviesu"),
+    value: 'lv',
+    flag: 'LV'
+  }];
   useEffect(() => {
-    loadLanguageData()
-  }, [user])
-
+    loadLanguageData();
+  }, [user]);
   const loadLanguageData = async () => {
-    if (!user) return
+    if (!user) return;
     try {
-      const { response, data } = await authFetch('/api/user/settings')
+      const {
+        response,
+        data
+      } = await authFetch('/api/user/settings');
       if (response.ok && data) {
-        setLanguage(data.language || 'en')
+        setLanguage(data.data?.language || locale || 'en');
       }
     } catch (error) {
-      console.error('Kļūda ielādējot valodu:', error)
+      console.error('Error loading language:', error);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
-
+  };
   const handleSave = async () => {
-    setIsSaving(true)
+    setIsSaving(true);
     try {
-      const { response, data } = await authFetch('/api/user/settings', {
+      const {
+        response,
+        data
+      } = await authFetch('/api/user/settings', {
         method: 'PUT',
         body: JSON.stringify({
           language
         })
-      })
-
+      });
       if (response.ok) {
-        Alert.alert('Veiksmīgi', 'Valoda atjaunināta')
-        router.back()
+        await updateUserSettings(data.data || {
+          language
+        });
+        Alert.alert(i18n.t('common.success'), i18n.t('profile.languageUpdated'));
+        router.back();
       } else {
-        Alert.alert('Kļūda', data.message || 'Neizdevās atjaunināt valodu')
+        Alert.alert(i18n.t('common.error'), data.message || i18n.t('errors.updateFailed'));
       }
     } catch (error) {
-      Alert.alert('Kļūda', error.message)
+      Alert.alert(i18n.t('common.error'), error.message);
     } finally {
-      setIsSaving(false)
+      setIsSaving(false);
     }
-  }
-
+  };
   if (isLoading) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <LinearGradient
-          colors={['rgba(58, 78, 72, 0.4)', 'rgba(58, 78, 72, 0.8)', 'rgba(58, 78, 72, 0.95)']}
-          style={styles.overlay}
-        >
+    return <SafeAreaView style={styles.container}>
+        <LinearGradient colors={['rgba(58, 78, 72, 0.4)', 'rgba(58, 78, 72, 0.8)', 'rgba(58, 78, 72, 0.95)']} style={styles.overlay}>
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color="#F5C842" />
           </View>
         </LinearGradient>
-      </SafeAreaView>
-    )
+      </SafeAreaView>;
   }
-
-  return (
-    <SafeAreaView style={styles.container}>
+  return <SafeAreaView style={styles.container}>
       <StatusBar style="light" />
-      <LinearGradient
-        colors={['rgba(58, 78, 72, 0.4)', 'rgba(58, 78, 72, 0.8)', 'rgba(58, 78, 72, 0.95)']}
-        style={styles.overlay}
-      >
-        {/* Virsraksts */}
+      <LinearGradient colors={['rgba(58, 78, 72, 0.4)', 'rgba(58, 78, 72, 0.8)', 'rgba(58, 78, 72, 0.95)']} style={styles.overlay}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()}>
             <MaterialIcons name="arrow-back" size={28} color="#FFFFFF" />
           </TouchableOpacity>
-          <Text style={styles.title}>Valoda</Text>
-          <View style={{ width: 28 }} />
+          <Text style={styles.title}>{i18n.t('profile.editLanguage')}</Text>
+          <View style={{
+          width: 28
+        }} />
         </View>
 
-        <ScrollView
-          style={styles.scrollContainer}
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-        >
-          <Text style={styles.description}>Izvēlieties aplikācijas valodu</Text>
+        <ScrollView style={styles.scrollContainer} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+          <Text style={styles.description}>{i18n.t('language.chooseLanguage')}</Text>
 
           <View style={styles.languageGrid}>
-            {languages.map((lang) => (
-              <TouchableOpacity
-                key={lang.value}
-                style={[
-                  styles.languageCard,
-                  language === lang.value && styles.languageCardSelected
-                ]}
-                onPress={() => setLanguage(lang.value)}
-              >
+            {languages.map(lang => <TouchableOpacity key={lang.value} style={[styles.languageCard, language === lang.value && styles.languageCardSelected]} onPress={() => setLanguage(lang.value)}>
                 <Text style={styles.languageFlag}>{lang.flag}</Text>
                 <Text style={styles.languageName}>{lang.label}</Text>
-                {language === lang.value && (
-                  <View style={styles.checkmark}>
+                {language === lang.value && <View style={styles.checkmark}>
                     <MaterialIcons name="check" size={20} color="#F5C842" />
-                  </View>
-                )}
-              </TouchableOpacity>
-            ))}
+                  </View>}
+              </TouchableOpacity>)}
           </View>
 
           <View style={styles.infoBox}>
             <MaterialIcons name="info" size={18} color="#F5C842" />
-            <Text style={styles.infoText}>Valoda tiks mainīta uzreiz pēc saglabāšanas</Text>
+            <Text style={styles.infoText}>{i18n.t('language.saveHint')}</Text>
           </View>
         </ScrollView>
 
-        {/* Saglabāt pogu */}
         <View style={styles.footer}>
-          <TouchableOpacity
-            style={[styles.saveButton, isSaving && styles.disabledButton]}
-            onPress={handleSave}
-            disabled={isSaving}
-          >
-            {isSaving ? (
-              <ActivityIndicator color="#2C3E50" />
-            ) : (
-              <Text style={styles.saveButtonText}>Saglabāt valodu</Text>
-            )}
+          <TouchableOpacity style={[styles.saveButton, isSaving && styles.disabledButton]} onPress={handleSave} disabled={isSaving}>
+            {isSaving ? <ActivityIndicator color="#2C3E50" /> : <Text style={styles.saveButtonText}>{i18n.t('language.saveLanguage')}</Text>}
           </TouchableOpacity>
         </View>
       </LinearGradient>
-    </SafeAreaView>
-  )
-}
-
-export default EditLanguageScreen
-
+    </SafeAreaView>;
+};
+export default EditLanguageScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#3A4E48',
+    backgroundColor: '#3A4E48'
   },
   overlay: {
-    flex: 1,
+    flex: 1
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
-    alignItems: 'center',
+    alignItems: 'center'
   },
   header: {
     flexDirection: 'row',
@@ -166,30 +142,30 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
+    borderBottomColor: 'rgba(255, 255, 255, 0.1)'
   },
   title: {
     fontSize: 22,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: '#FFFFFF'
   },
   scrollContainer: {
-    flex: 1,
+    flex: 1
   },
   scrollContent: {
     paddingHorizontal: 16,
-    paddingVertical: 20,
+    paddingVertical: 20
   },
   description: {
     fontSize: 14,
     color: 'rgba(255, 255, 255, 0.7)',
-    marginBottom: 20,
+    marginBottom: 20
   },
   languageGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    marginBottom: 24,
+    marginBottom: 24
   },
   languageCard: {
     width: '48%',
@@ -199,21 +175,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 2,
     borderColor: 'rgba(255, 255, 255, 0.2)',
-    marginBottom: 12,
+    marginBottom: 12
   },
   languageCardSelected: {
     borderColor: '#F5C842',
-    backgroundColor: 'rgba(245, 200, 66, 0.15)',
+    backgroundColor: 'rgba(245, 200, 66, 0.15)'
   },
   languageFlag: {
-    fontSize: 40,
-    marginBottom: 8,
+    fontSize: 24,
+    fontWeight: '800',
+    color: '#FFFFFF',
+    marginBottom: 8
   },
   languageName: {
     fontSize: 14,
     fontWeight: '600',
     color: '#FFFFFF',
-    textAlign: 'center',
+    textAlign: 'center'
   },
   checkmark: {
     position: 'absolute',
@@ -221,7 +199,7 @@ const styles = StyleSheet.create({
     right: 8,
     backgroundColor: 'rgba(58, 78, 72, 0.8)',
     borderRadius: 12,
-    padding: 4,
+    padding: 4
   },
   infoBox: {
     flexDirection: 'row',
@@ -229,34 +207,34 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 12,
     marginTop: 20,
-    alignItems: 'center',
+    alignItems: 'center'
   },
   infoText: {
     fontSize: 13,
     color: 'rgba(255, 255, 255, 0.7)',
     marginLeft: 8,
-    flex: 1,
+    flex: 1
   },
   footer: {
     paddingHorizontal: 16,
     paddingBottom: 20,
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(255, 255, 255, 0.1)',
+    borderTopColor: 'rgba(255, 255, 255, 0.1)'
   },
   saveButton: {
     backgroundColor: '#F5C842',
     paddingVertical: 14,
     borderRadius: 8,
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'center'
   },
   disabledButton: {
-    opacity: 0.6,
+    opacity: 0.6
   },
   saveButtonText: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#2C3E50',
-  },
-})
+    color: '#2C3E50'
+  }
+});

@@ -1,212 +1,174 @@
-import { StyleSheet, Text, View, SafeAreaView, ScrollView, TouchableOpacity, Alert } from 'react-native'
-import { StatusBar } from 'expo-status-bar'
-import { LinearGradient } from 'expo-linear-gradient'
-import { useRouter } from 'expo-router'
-import { MaterialIcons } from '@expo/vector-icons'
-import { useAuth } from '../_context/AuthContext'
-
+import i18n from "../../lib/i18n";
+import { StyleSheet, Text, View, SafeAreaView, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
+import { MaterialIcons } from '@expo/vector-icons';
+import { useAuth } from '../_context/AuthContext';
 const MoreScreen = () => {
-  const router = useRouter()
-  const { logout } = useAuth()
+  const router = useRouter();
+  const {
+    logout,
+    user
+  } = useAuth();
+  const isAdmin = user?.role === 'admin';
 
   // Navigācijai uz rediģēšanas ekrāniem
-  const handleNavigate = (screen) => {
-    router.push(screen)
-  }
-
+  const handleNavigate = screen => {
+    router.push(screen);
+  };
   const handleLogout = () => {
-    Alert.alert(
-      'Log out',
-      'Are you sure you want to log out?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Log out',
-          style: 'destructive',
-          onPress: async () => {
-            await logout()
-            router.replace('/login')
-          },
-        },
-      ]
-    )
-  }
-
-  const MenuSection = ({ title, items }) => (
-    <View style={styles.section}>
+    Alert.alert(i18n.t("ui.log_out"), i18n.t("ui.are_you_sure_you_want_to_log_out"), [{
+      text: i18n.t("ui.cancel"),
+      style: 'cancel'
+    }, {
+      text: i18n.t("ui.log_out"),
+      style: 'destructive',
+      onPress: async () => {
+        await logout();
+        router.replace('/login');
+      }
+    }]);
+  };
+  const MenuSection = ({
+    title,
+    items
+  }) => <View style={styles.section}>
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>{title}</Text>
       </View>
       <View style={styles.itemsContainer}>
-        {items.map((item, index) => (
-          <TouchableOpacity
-            key={index}
-            style={[
-              styles.menuItem,
-              index === items.length - 1 && styles.lastMenuItem
-            ]}
-            onPress={() => handleNavigate(item.route)}
-            activeOpacity={0.7}
-          >
+        {items.map((item, index) => <TouchableOpacity key={index} style={[styles.menuItem, index === items.length - 1 && styles.lastMenuItem]} onPress={() => handleNavigate(item.route)} activeOpacity={0.7}>
             <View style={styles.itemContent}>
               <MaterialIcons name={item.icon} size={24} color="#FFFFFF" style={styles.itemIcon} />
-              <View>
+              <View style={styles.itemText}>
                 <Text style={styles.itemLabel}>{item.label}</Text>
                 {item.subtitle && <Text style={styles.itemSubtitle}>{item.subtitle}</Text>}
               </View>
             </View>
             <MaterialIcons name="chevron-right" size={24} color="#FFFFFF" />
-          </TouchableOpacity>
-        ))}
+          </TouchableOpacity>)}
       </View>
-    </View>
-  )
-
-  return (
-    <SafeAreaView style={styles.container}>
+    </View>;
+  return <SafeAreaView style={styles.container}>
       <StatusBar style="light" />
-      <LinearGradient
-        colors={['rgba(58, 78, 72, 0.4)', 'rgba(58, 78, 72, 0.8)', 'rgba(58, 78, 72, 0.95)']}
-        style={styles.overlay}
-      >
-        <View style={styles.header}>
-          <Text style={styles.title}>More</Text>
-        </View>
+      <LinearGradient colors={['rgba(58, 78, 72, 0.4)', 'rgba(58, 78, 72, 0.8)', 'rgba(58, 78, 72, 0.95)']} style={styles.overlay}>
         
-        <ScrollView
-          style={styles.scrollContainer}
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-        >
+        <ScrollView style={styles.scrollContainer} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
           {/* Konts sekcija */}
-          <MenuSection
-            title="Account"
-            items={[
-              {
-                label: 'Account',
-                subtitle: 'Rediģējiet kontu informāciju',
-                icon: 'person',
-                route: '/edit-account'
-              },
-              {
-                label: 'Password',
-                subtitle: 'Rediģējiet paroli',
-                icon: 'lock',
-                route: '/edit-password'
-              }
-            ]}
-          />
+          <MenuSection title={i18n.t("ui.account")} items={[{
+          label: i18n.t("ui.account"),
+          subtitle: i18n.t("ui.redigejiet_kontu_informaciju"),
+          icon: 'person',
+          route: '/edit-account'
+        }, {
+          label: i18n.t("ui.password"),
+          subtitle: i18n.t("ui.redigejiet_paroli"),
+          icon: 'lock',
+          route: '/edit-password'
+        }]} />
 
           {/* Profila sekcija */}
-          <MenuSection
-            title="Profile"
-            items={[
-              {
-                label: 'Profile',
-                subtitle: 'Dzimšanas diena, dzimums, augums',
-                icon: 'person-outline',
-                route: '/edit-profile'
-              },
-              {
-                label: 'Weight',
-                subtitle: 'Saglabajiet pasreizejo svaru',
-                icon: 'monitor-weight',
-                route: '/edit-weight'
-              }
-            ]}
-          />
+          <MenuSection title={i18n.t("ui.profile")} items={[{
+          label: i18n.t("ui.profile"),
+          subtitle: i18n.t("ui.dzimsanas_diena_dzimums_augums"),
+          icon: 'person-outline',
+          route: '/edit-profile'
+        }, {
+          label: i18n.t("ui.weight"),
+          subtitle: i18n.t("ui.save_current_weight"),
+          icon: 'monitor-weight',
+          route: '/edit-weight'
+        }, {
+          label: i18n.t("ui.goals"),
+          subtitle: i18n.t("ui.svara_un_uzturs_merki"),
+          icon: 'flag',
+          route: '/edit-goals'
+        }]} />
 
-          <MenuSection
-            title="Settings"
-            items={[
-              {
-                label: 'Units',
-                subtitle: 'Svara, auguma, distances vienības',
-                icon: 'straighten',
-                route: '/edit-units'
-              },
-              {
-                label: 'Language',
-                subtitle: 'Izvēlieties aplikācijas valodu',
-                icon: 'language',
-                route: '/edit-language'
-              }
-            ]}
-          />
+          <MenuSection title={i18n.t("ui.settings")} items={[{
+          label: i18n.t("ui.units"),
+          subtitle: i18n.t("ui.svara_auguma_distances_vienibas"),
+          icon: 'straighten',
+          route: '/edit-units'
+        }, {
+          label: i18n.t("ui.language"),
+          subtitle: i18n.t("ui.izvelieties_aplikacijas_valodu"),
+          icon: 'language',
+          route: '/edit-language'
+        }]} />
 
-          {/* Mērķu sekcija */}
-          <MenuSection
-            title="Goals"
-            items={[
-              {
-                label: 'Goals',
-                subtitle: 'Svara un uzturs mērķi',
-                icon: 'target',
-                route: '/edit-goals'
-              }
-            ]}
-          />
+          <MenuSection title={i18n.t("ui.library")} items={[{
+          label: i18n.t("ui.exercises"),
+          subtitle: i18n.t("ui.browse_all_available_exercises"),
+          icon: 'fitness-center',
+          route: '/exercises'
+        }, {
+          label: i18n.t("ui.foods"),
+          subtitle: i18n.t("ui.browse_all_available_foods"),
+          icon: 'restaurant',
+          route: '/foods'
+        }, {
+          label: i18n.t("ui.muscle_groups"),
+          subtitle: i18n.t("ui.browse_all_available_muscle_groups"),
+          icon: 'accessibility',
+          route: '/muscle-groups'
+        }]} />
+
+          {isAdmin && <MenuSection title={i18n.t("ui.admin")} items={[{
+          label: i18n.t("ui.admin_panel"),
+          subtitle: i18n.t("ui.manage_users_and_their_content"),
+          icon: 'admin-panel-settings',
+          route: '/admin-users'
+        }]} />}
 
           <TouchableOpacity style={styles.logoutButton} onPress={handleLogout} activeOpacity={0.7}>
             <View style={styles.itemContent}>
               <MaterialIcons name="logout" size={24} color="#FF6B6B" style={styles.itemIcon} />
-              <View>
-                <Text style={styles.logoutLabel}>Log out</Text>
-                <Text style={styles.itemSubtitle}>Sign out of your account</Text>
+              <View style={styles.itemText}>
+                <Text style={styles.logoutLabel}>{i18n.t("ui.log_out")}</Text>
+                <Text style={styles.itemSubtitle}>{i18n.t("ui.sign_out_of_your_account")}</Text>
               </View>
             </View>
           </TouchableOpacity>
         </ScrollView>
       </LinearGradient>
-    </SafeAreaView>
-  )
-}
-
-export default MoreScreen
-
+    </SafeAreaView>;
+};
+export default MoreScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#3A4E48',
+    backgroundColor: '#3A4E48'
   },
   overlay: {
-    flex: 1,
-  },
-  header: {
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 10,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: '700',
-    color: '#FFFFFF',
+    flex: 1
   },
   scrollContainer: {
-    flex: 1,
+    flex: 1
   },
   scrollContent: {
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingVertical: 12
   },
   section: {
-    marginBottom: 20,
+    marginBottom: 20
   },
   sectionHeader: {
     paddingHorizontal: 8,
-    paddingVertical: 10,
+    paddingVertical: 10
   },
   sectionTitle: {
     fontSize: 14,
     fontWeight: '600',
     color: 'rgba(255, 255, 255, 0.7)',
     textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    letterSpacing: 0.5
   },
   itemsContainer: {
     backgroundColor: 'rgba(58, 78, 72, 0.5)',
     borderRadius: 12,
-    overflow: 'hidden',
+    overflow: 'hidden'
   },
   menuItem: {
     flexDirection: 'row',
@@ -215,28 +177,31 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     paddingHorizontal: 16,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
+    borderBottomColor: 'rgba(255, 255, 255, 0.1)'
   },
   lastMenuItem: {
-    borderBottomWidth: 0,
+    borderBottomWidth: 0
   },
   itemContent: {
     flex: 1,
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'center'
   },
   itemIcon: {
-    marginRight: 12,
+    marginRight: 12
+  },
+  itemText: {
+    flex: 1
   },
   itemLabel: {
     fontSize: 16,
     fontWeight: '600',
     color: '#FFFFFF',
-    marginBottom: 2,
+    marginBottom: 2
   },
   itemSubtitle: {
     fontSize: 12,
-    color: 'rgba(255, 255, 255, 0.6)',
+    color: 'rgba(255, 255, 255, 0.6)'
   },
   logoutButton: {
     flexDirection: 'row',
@@ -248,12 +213,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255, 107, 107, 0.24)',
     marginTop: 4,
-    marginBottom: 24,
+    marginBottom: 24
   },
   logoutLabel: {
     fontSize: 16,
     fontWeight: '600',
     color: '#FF6B6B',
-    marginBottom: 2,
-  },
-})
+    marginBottom: 2
+  }
+});

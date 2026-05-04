@@ -51,6 +51,7 @@ router.post('/register', async (req, res) => {
       proteinGoal,
       fatGoal,
       carbGoal,
+      stepGoal,
       language
     } = req.body;
 
@@ -98,7 +99,8 @@ router.post('/register', async (req, res) => {
       calorieGoal: calorieGoal ? parseFloat(calorieGoal) : null,
       proteinGoal: proteinGoal ? parseFloat(proteinGoal) : null,
       fatGoal: fatGoal ? parseFloat(fatGoal) : null,
-      carbGoal: carbGoal ? parseFloat(carbGoal) : null
+      carbGoal: carbGoal ? parseFloat(carbGoal) : null,
+      stepGoal: stepGoal ? parseInt(stepGoal, 10) : 10000
     });
 
     if (weight) {
@@ -190,6 +192,7 @@ router.post('/login', async (req, res) => {
 
     // Return user data (without password)
     const userWithoutPassword = AuthService.sanitizeUser(user);
+    userWithoutPassword.settings = await UserSettingsModel.findByUserId(user.id);
 
     res.json({
       success: true,
@@ -246,6 +249,10 @@ router.post('/refresh', async (req, res) => {
       data: {
         accessToken: newAccessToken,
         refreshToken: newRefreshToken,
+        user: {
+          ...AuthService.sanitizeUser(user),
+          settings: await UserSettingsModel.findByUserId(user.id)
+        },
         accessTokenExpiresIn: '15m',
         refreshTokenExpiresIn: '30d'
       }

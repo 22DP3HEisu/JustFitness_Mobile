@@ -20,7 +20,8 @@ const Models = {
   ExerciseLogModel: require('../lib/DbModels/exerciseLogModel'),
   SetLogModel: require('../lib/DbModels/SetLogModel'),
   MealModel: require('../lib/DbModels/mealModel'),
-  FoodModel: require('../lib/DbModels/foodModel')
+  FoodModel: require('../lib/DbModels/foodModel'),
+  WaterLogModel: require('../lib/DbModels/waterLogModel')
 };
 
 async function setupDatabase() {

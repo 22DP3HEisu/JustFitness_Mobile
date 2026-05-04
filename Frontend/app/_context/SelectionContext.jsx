@@ -7,15 +7,15 @@ const SelectionContext = createContext(null)
  * Config is passed via route params to avoid timing issues.
  */
 export const SelectionProvider = ({ children }) => {
-  // Store callback in ref - survives navigation and avoids re-renders
-  const callbackRef = useRef(null)
+  // Store callbacks in a stack so nested selection flows do not overwrite their parent.
+  const callbackStackRef = useRef([])
   
   /**
    * Set the selection callback before navigating
    * @param {Function} callback - Function to call with selected items
    */
   const setSelectionCallback = useCallback((callback) => {
-    callbackRef.current = callback
+    callbackStackRef.current = [...callbackStackRef.current, callback]
   }, [])
   
   /**
@@ -23,9 +23,11 @@ export const SelectionProvider = ({ children }) => {
    * @param {Array} selectedItems - Array of selected item objects
    */
   const confirmSelection = useCallback((selectedItems) => {
-    if (callbackRef.current) {
-      callbackRef.current(selectedItems)
-      callbackRef.current = null
+    const callback = callbackStackRef.current[callbackStackRef.current.length - 1]
+    callbackStackRef.current = callbackStackRef.current.slice(0, -1)
+
+    if (callback) {
+      callback(selectedItems)
     }
   }, [])
   
@@ -33,7 +35,7 @@ export const SelectionProvider = ({ children }) => {
    * Clear callback without firing (user cancelled)
    */
   const cancelSelection = useCallback(() => {
-    callbackRef.current = null
+    callbackStackRef.current = callbackStackRef.current.slice(0, -1)
   }, [])
   
   return (
