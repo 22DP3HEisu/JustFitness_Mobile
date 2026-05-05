@@ -51,7 +51,7 @@ const LoginScreen = () => {
       const data = await response.json();
       if (response.ok && data.success) {
         console.log('Login successful for:', email);
-        // Store the token and user data in context
+        // Tokens un lietotāja dati tiek saglabāti kontekstā.
         await login(data.data.accessToken, data.data.user, data.data.refreshToken);
         router.replace('/(tabs)');
       } else {

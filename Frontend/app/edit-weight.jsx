@@ -1,3 +1,5 @@
+// Skats nodrošina pašreizējā svara saglabāšanu lietotāja svara vēsturē.
+// Ievadītā vērtība tiek izmantota progresa uzraudzībai un vēlāk attēlota svara izmaiņu pārskatā.
 import i18n from "../lib/i18n";
 import { StyleSheet, Text, View, SafeAreaView, TouchableOpacity, Alert, ScrollView, ActivityIndicator } from 'react-native';
 import { StatusBar } from 'expo-status-bar';

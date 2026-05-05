@@ -1,3 +1,5 @@
+// Skats ļauj lietotājam mainīt lietotnes saskarnes valodu.
+// Izvēlētā valoda tiek saglabāta iestatījumos un izmantota lietotnes tekstu attēlošanai.
 import { StyleSheet, Text, View, SafeAreaView, TouchableOpacity, Alert, ScrollView, ActivityIndicator } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';

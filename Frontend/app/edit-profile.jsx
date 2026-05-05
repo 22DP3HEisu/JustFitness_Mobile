@@ -1,3 +1,5 @@
+// Skats ļauj lietotājam rediģēt profila pamatdatus.
+// Tajā tiek mainīts vārds, e-pasts un cita profila informācija, kas tiek attēlota lietotāja kontā.
 import i18n from "../lib/i18n";
 import { StyleSheet, Text, View, SafeAreaView, TouchableOpacity, Alert, ScrollView, ActivityIndicator } from 'react-native';
 import { StatusBar } from 'expo-status-bar';

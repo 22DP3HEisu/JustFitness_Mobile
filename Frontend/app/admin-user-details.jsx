@@ -1,3 +1,5 @@
+// Administratora skats ļauj apskatīt un rediģēt konkrēta lietotāja informāciju.
+// Ekrānā administrators var pārbaudīt profila datus, statusu un lietotāja izveidoto saturu.
 import i18n from "../lib/i18n";
 import { StyleSheet, Text, View, TouchableOpacity, ScrollView, TextInput, ActivityIndicator, Alert, FlatList } from 'react-native';
 import { StatusBar } from 'expo-status-bar';

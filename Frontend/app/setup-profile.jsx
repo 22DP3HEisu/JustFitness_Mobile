@@ -79,7 +79,7 @@ const SetupProfileScreen = () => {
     login
   } = useAuth();
 
-  // User data from registration
+  // Lietotāja dati no reģistrācijas formas.
   const userData = {
     name: params.name,
     email: params.email,
@@ -150,7 +150,7 @@ const SetupProfileScreen = () => {
       Alert.alert(i18n.t("ui.error"), i18n.t("ui.please_enter_valid_numbers_for_height_weight_and_goal_w"));
       return false;
     }
-    // Nutrition goals are optional, but if provided, must be valid numbers
+    // Uztura mērķi nav obligāti, bet ievadītajām vērtībām jābūt derīgiem skaitļiem.
     if (calorieGoal && isNaN(calorieGoal)) {
       Alert.alert(i18n.t("ui.error"), i18n.t("ui.please_enter_a_valid_number_for_calorie_goal"));
       return false;
@@ -269,7 +269,7 @@ const SetupProfileScreen = () => {
               </View>
             </View>
 
-            {/* Gender Selection */}
+            {/* Dzimuma izvēles sadaļa */}
             <View style={styles.inputContainer}>
               <Text style={styles.label}>{i18n.t("ui.gender_3")}</Text>
               <View style={styles.genderContainer}>
@@ -292,28 +292,28 @@ const SetupProfileScreen = () => {
               </TouchableOpacity>
             </View>
 
-            {/* Nutrition Goals Section */}
+            {/* Uztura mērķu sadaļa */}
             <Text style={styles.sectionTitle}>{i18n.t("ui.daily_nutrition_goals_optional")}</Text>
 
-            {/* Calorie Goal Input */}
+            {/* Kaloriju mērķa ievades lauks */}
             <View style={styles.inputContainer}>
               <Text style={styles.label}>{i18n.t("ui.daily_calorie_goal")}</Text>
               <TextInput style={[styles.input, focusedField === 'calorieGoal' && styles.inputFocused]} value={calorieGoal} onChangeText={setCalorieGoal} onFocus={() => setFocusedField('calorieGoal')} onBlur={() => setFocusedField(null)} placeholder={i18n.t("ui.e_g_2000")} placeholderTextColor="rgba(255, 255, 255, 0.6)" keyboardType="decimal-pad" />
             </View>
 
-            {/* Protein Goal Input */}
+            {/* Proteīna mērķa ievades lauks */}
             <View style={styles.inputContainer}>
               <Text style={styles.label}>{i18n.t("ui.daily_protein_goal_g")}</Text>
               <TextInput style={[styles.input, focusedField === 'proteinGoal' && styles.inputFocused]} value={proteinGoal} onChangeText={setProteinGoal} onFocus={() => setFocusedField('proteinGoal')} onBlur={() => setFocusedField(null)} placeholder={i18n.t("ui.e_g_150")} placeholderTextColor="rgba(255, 255, 255, 0.6)" keyboardType="decimal-pad" />
             </View>
 
-            {/* Fat Goal Input */}
+            {/* Tauku mērķa ievades lauks */}
             <View style={styles.inputContainer}>
               <Text style={styles.label}>{i18n.t("ui.daily_fat_goal_g")}</Text>
               <TextInput style={[styles.input, focusedField === 'fatGoal' && styles.inputFocused]} value={fatGoal} onChangeText={setFatGoal} onFocus={() => setFocusedField('fatGoal')} onBlur={() => setFocusedField(null)} placeholder={i18n.t("ui.e_g_65")} placeholderTextColor="rgba(255, 255, 255, 0.6)" keyboardType="decimal-pad" />
             </View>
 
-            {/* Carb Goal Input */}
+            {/* Ogļhidrātu mērķa ievades lauks */}
             <View style={styles.inputContainer}>
               <Text style={styles.label}>{i18n.t("ui.daily_carb_goal_g")}</Text>
               <TextInput style={[styles.input, focusedField === 'carbGoal' && styles.inputFocused]} value={carbGoal} onChangeText={setCarbGoal} onFocus={() => setFocusedField('carbGoal')} onBlur={() => setFocusedField(null)} placeholder={i18n.t("ui.e_g_225")} placeholderTextColor="rgba(255, 255, 255, 0.6)" keyboardType="decimal-pad" />
@@ -326,7 +326,7 @@ const SetupProfileScreen = () => {
               <TextInput style={[styles.input, focusedField === 'stepGoal' && styles.inputFocused]} value={stepGoal} onChangeText={setStepGoal} onFocus={() => setFocusedField('stepGoal')} onBlur={() => setFocusedField(null)} placeholder={i18n.t("ui.e_g_10000")} placeholderTextColor="rgba(255, 255, 255, 0.6)" keyboardType="number-pad" />
             </View>
 
-            {/* Continue Button */}
+            {/* Turpināšanas poga */}
             <TouchableOpacity style={[styles.continueButton, isLoading && styles.continueButtonDisabled]} onPress={handleContinue} disabled={isLoading}>
               {isLoading ? <ActivityIndicator color="#2C3E50" size="small" /> : <Text style={styles.continueButtonText}>{i18n.t("ui.continue")}</Text>}
             </TouchableOpacity>

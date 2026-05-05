@@ -1,3 +1,5 @@
+// Maršruti nodrošina ūdens patēriņa ierakstu pievienošanu, izgūšanu un dzēšanu.
+// Tie ļauj lietotājam reģistrēt izdzerto ūdens daudzumu un pārskatīt dienas kopējo patēriņu.
 const express = require('express');
 const { authenticateToken } = require('../lib/auth');
 const WaterLogModel = require('../lib/DbModels/waterLogModel');

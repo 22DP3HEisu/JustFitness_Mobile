@@ -1,3 +1,5 @@
+// Universāls modālais izvēles logs vienas vērtības atlasīšanai no saraksta.
+// Komponente tiek atkārtoti izmantota iestatījumos un formās, kur nepieciešama vienkārša izvēle no piedāvātām vērtībām.
 import i18n from "../../lib/i18n";
 import { Modal, Pressable, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Picker } from '@react-native-picker/picker';

@@ -1,3 +1,5 @@
+// Maršruti nodrošina ēdienu izveidi, izgūšanu, atjaunināšanu un dzēšanu.
+// Tie apstrādā gan lietotāja privātos ēdienus, gan publiski pieejamos ēdienus ar uzturvērtības datiem.
 const express = require('express');
 const { authenticateToken } = require('../lib/auth');
 const FoodModel = require('../lib/DbModels/foodModel');

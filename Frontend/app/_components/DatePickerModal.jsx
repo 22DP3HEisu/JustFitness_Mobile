@@ -1,3 +1,5 @@
+// Modālais logs nodrošina datuma izvēli profila un citu formu ievades laukiem.
+// Komponente atver atsevišķu izvēles logu, kur lietotājs var mainīt datumu, neatstājot pašreizējo ekrānu.
 import i18n from "../../lib/i18n";
 import { Modal, Pressable, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';

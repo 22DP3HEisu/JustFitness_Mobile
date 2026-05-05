@@ -1,3 +1,5 @@
+// Modelis nodrošina lietotāja ūdens patēriņa ierakstu saglabāšanu un izgūšanu.
+// Ieraksti tiek izmantoti dienas ūdens mērķa izpildes aprēķināšanai un pārskata attēlošanai.
 const { db } = require('../database');
 
 class WaterLogModel {

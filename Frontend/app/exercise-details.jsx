@@ -1,3 +1,5 @@
+// Vingrinājuma detaļu skats attēlo informāciju, progresu un rediģēšanas iespējas.
+// Lietotājs šeit var apskatīt vingrinājuma aprakstu, muskuļu grupas un nepieciešamības gadījumā mainīt ieraksta datus.
 import i18n from "../lib/i18n";
 import { StyleSheet, Text, View, TextInput, TouchableOpacity, ScrollView, Alert, ActivityIndicator, KeyboardAvoidingView, Platform, Switch, useWindowDimensions } from 'react-native';
 import { StatusBar } from 'expo-status-bar';

@@ -1,4 +1,4 @@
-// Load environment variables first
+// Vispirms tiek ielādēti vides mainīgie.
 require('dotenv').config();
 
 var express = require('express');
@@ -24,14 +24,14 @@ var WaterLogModel = require('./lib/DbModels/waterLogModel');
 
 var app = express();
 
-// Add CORS and CSP headers for development
+// Izstrādes režīmā tiek pievienotas CORS un CSP galvenes.
 app.use((req, res, next) => {
-  // CORS headers
+  // CORS galvenes.
   res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
   
-  // CSP headers for development (more permissive)
+  // CSP galvenes izstrādes režīmam ar plašākām atļaujām.
   if (process.env.NODE_ENV !== 'production') {
     res.header('Content-Security-Policy', "default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: ws: wss: http: https:; connect-src 'self' ws: wss: http: https:;");
   }
@@ -57,7 +57,7 @@ app.use('/api/dashboard', dashboard);
 app.use('/api/admin', admin);
 app.use('/api/water', water);
 
-// Error handling middleware
+// Kļūdu apstrādes starpslānis.
 app.use((err, req, res, next) => {
   console.error('Error:', err);
   

@@ -1,18 +1,18 @@
 const { db } = require('../database');
 
 /**
- * Muskulķu_grupa (Muscle Group) model for database operations
- * Izseko mašas muskulķu grupas, kuras var trenēt
- * MySQL implementācija
+ * Muskuļu_grupa modelis datubāzes darbībām
+ * Izseko visas muskuļu grupas, kuras var trenēt
+ * MySQL īstenojums
  */
 class MuscleGroupModel {
   static tableName = 'muscle_groups';
   
   /**
-   * Izveido muskulķu grupu tabulu
+   * Izveido muskuļu grupu tabulu
    */
   static async createTable() {
-    // Izveido tabulu muskulķu grupu datiem ar aprakstu
+    // Izveido tabulu muskuļu grupu datiem ar aprakstu
     const createTableSQL = `
       CREATE TABLE IF NOT EXISTS muscle_groups (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -35,7 +35,7 @@ class MuscleGroupModel {
   }
 
   /**
-   * Izveido jaunu muskulķu grupu
+   * Izveido jaunu muskuļu grupu
    */
   static async create(name, description = null) {
     const sql = `
@@ -55,7 +55,7 @@ class MuscleGroupModel {
   }
 
   /**
-   * Atrod muskulķu grupu pēc ID
+   * Atrod muskuļu grupu pēc ID
    */
   static async findById(id) {
     const sql = `
@@ -73,7 +73,7 @@ class MuscleGroupModel {
   }
 
   /**
-   * Atrod muskulķu grupu pēc nosaukuma
+   * Atrod muskuļu grupu pēc nosaukuma
    */
   static async findByName(name) {
     const sql = `
@@ -91,7 +91,7 @@ class MuscleGroupModel {
   }
 
   /**
-   * Iegūst visas muskulķu grupas
+   * Iegūst visas muskuļu grupas
    */
   static async findAll() {
     const sql = `
@@ -109,7 +109,7 @@ class MuscleGroupModel {
   }
 
   /**
-   * Atjaunina muskulķu grupu
+   * Atjaunina muskuļu grupu
    */
   static async update(id, name, description) {
     const sql = `
@@ -131,7 +131,7 @@ class MuscleGroupModel {
   }
 
   /**
-   * Dzēš muskulķu grupu
+   * Dzēš muskuļu grupu
    */
   static async delete(id) {
     const sql = `DELETE FROM muscle_groups WHERE id = ?`;

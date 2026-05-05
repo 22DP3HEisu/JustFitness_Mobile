@@ -1,7 +1,7 @@
 const { db } = require('../database');
 
 /**
- * Treniņu_piegājiens (Workout Session) model for database operations
+ * Treniņu_piegājiens modelis datubāzes darbībām
  * Izseko lietotāja treniņu sesijas un to statuss
  */
 class WorkoutLogModel {
@@ -44,7 +44,7 @@ class WorkoutLogModel {
   }
 
   /**
-   * Pabeig treniņu sesiju
+   * Pabeidz treniņu sesiju
    */
   static async complete(id) {
     const sql = `
@@ -80,7 +80,7 @@ class WorkoutLogModel {
   }
 
   /**
-   * Atrod nepābeigu treniņu sesiju
+   * Atrod nepabeigtu treniņu sesiju
    */
   static async findCompletedByWorkoutId(userId, workoutId, limit = 8) {
     const safeLimit = Math.max(1, Math.min(parseInt(limit, 10) || 8, 20));

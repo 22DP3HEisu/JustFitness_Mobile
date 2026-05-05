@@ -1,3 +1,5 @@
+// Treniņa detaļu skats attēlo plāna informāciju, sesiju vēsturi un dzēšanas iespēju.
+// Šeit lietotājs redz treniņā iekļautos vingrinājumus, iepriekšējās izpildes un var sākt jaunu sesiju.
 import i18n from "../lib/i18n";
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity, ActivityIndicator, useWindowDimensions, Alert } from 'react-native';
 import { StatusBar } from 'expo-status-bar';

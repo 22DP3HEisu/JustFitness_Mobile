@@ -65,7 +65,7 @@ const findOwnedSetLog = async (setLogId, userId) => {
 
 /**
  * GET /api/workouts
- * Get all workouts for the authenticated user
+ * Iegūst visus autentificētā lietotāja treniņus.
  */
 router.get('/', authenticateToken, async (req, res) => {
   try {
@@ -88,7 +88,7 @@ router.get('/', authenticateToken, async (req, res) => {
 
 /**
  * GET /api/workouts/:id/details
- * Get workout details with recent completed session volume
+ * Iegūst treniņa detaļas un pēdējo pabeigto sesiju apjomu.
  */
 router.get('/:id/details', authenticateToken, async (req, res) => {
   try {
@@ -131,7 +131,7 @@ router.get('/:id/details', authenticateToken, async (req, res) => {
 
 /**
  * GET /api/workouts/:id
- * Get a specific workout by ID
+ * Iegūst konkrētu treniņu pēc identifikatora.
  */
 router.get('/:id', authenticateToken, async (req, res) => {
   try {
@@ -146,7 +146,7 @@ router.get('/:id', authenticateToken, async (req, res) => {
       });
     }
 
-    // Check if workout belongs to the authenticated user
+    // Tiek pārbaudīts, vai treniņš pieder autentificētajam lietotājam.
     if (workout.user_id !== userId) {
       return res.status(403).json({
         success: false,
@@ -170,9 +170,9 @@ router.get('/:id', authenticateToken, async (req, res) => {
 
 /**
  * POST /api/workouts
- * Create a new workout
- * Required fields: name
- * Optional fields: description, workoutDate
+ * Izveido jaunu treniņu.
+ * Obligātais lauks: name.
+ * Neobligātie lauki: description, workoutDate.
  */
 router.post('/', authenticateToken, async (req, res) => {
   try {
@@ -216,7 +216,7 @@ router.post('/', authenticateToken, async (req, res) => {
 
 /**
  * PUT /api/workouts/:id
- * Update a workout
+ * Atjaunina treniņa datus.
  */
 router.put('/:id', authenticateToken, async (req, res) => {
   try {
@@ -279,14 +279,14 @@ router.put('/:id', authenticateToken, async (req, res) => {
 
 /**
  * DELETE /api/workouts/:id
- * Delete a workout
+ * Dzēš treniņu.
  */
 router.delete('/:id', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user.userId;
 
-    // Check if workout exists
+    // Tiek pārbaudīts, vai treniņš eksistē.
     const workout = await WorkoutModel.findById(id);
     if (!workout) {
       return res.status(404).json({
@@ -295,7 +295,7 @@ router.delete('/:id', authenticateToken, async (req, res) => {
       });
     }
 
-    // Check if workout belongs to the authenticated user
+    // Tiek pārbaudīts, vai treniņš pieder autentificētajam lietotājam.
     if (workout.user_id !== userId) {
       return res.status(403).json({
         success: false,
@@ -303,7 +303,7 @@ router.delete('/:id', authenticateToken, async (req, res) => {
       });
     }
 
-    // Delete workout
+    // Tiek dzēsts treniņš.
     const deleted = await WorkoutModel.delete(id);
     if (deleted) {
       res.json({
@@ -328,9 +328,9 @@ router.delete('/:id', authenticateToken, async (req, res) => {
 
 /**
  * POST /api/workouts/:workoutId/exercises
- * Add a set for an exercise in a workout
- * Required fields: exerciseId, setNumber, reps
- * Optional fields: weight, weightUnit, duration, restDuration, notes
+ * Pievieno treniņam vingrinājuma setu.
+ * Obligātie lauki: exerciseId, setNumber, reps.
+ * Neobligātie lauki: weight, weightUnit, duration, restDuration, notes.
  */
 router.post('/:workoutId/exercises', authenticateToken, async (req, res) => {
   try {
@@ -338,7 +338,7 @@ router.post('/:workoutId/exercises', authenticateToken, async (req, res) => {
     const userId = req.user.userId;
     const { exerciseId, setNumber, reps, weight, weightUnit, duration, restDuration, notes } = req.body;
 
-    // Validate required fields
+    // Tiek pārbaudīti obligātie lauki.
     if (!exerciseId || !setNumber || reps === undefined) {
       return res.status(400).json({
         success: false,
@@ -346,7 +346,7 @@ router.post('/:workoutId/exercises', authenticateToken, async (req, res) => {
       });
     }
 
-    // Check if workout exists and belongs to user
+    // Tiek pārbaudīts, vai treniņš eksistē. and belongs to user
     const workout = await WorkoutModel.findById(workoutId);
     if (!workout) {
       return res.status(404).json({
@@ -362,7 +362,7 @@ router.post('/:workoutId/exercises', authenticateToken, async (req, res) => {
       });
     }
 
-    // Add exercise set to workout
+    // Treniņam tiek pievienots vingrinājuma sets.
     const workoutExercise = await WorkoutExerciseModel.add(
       workoutId,
       exerciseId,
@@ -393,7 +393,7 @@ router.post('/:workoutId/exercises', authenticateToken, async (req, res) => {
 
 /**
  * PUT /api/workouts/:workoutId/exercises/:exerciseId
- * Update an exercise in a workout
+ * Atjaunina treniņā iekļauto vingrinājumu.
  */
 router.put('/:workoutId/exercises/:exerciseId', authenticateToken, async (req, res) => {
   try {
@@ -401,7 +401,7 @@ router.put('/:workoutId/exercises/:exerciseId', authenticateToken, async (req, r
     const userId = req.user.userId;
     const { sets, reps, weight, weightUnit, duration, restDuration, notes } = req.body;
 
-    // Check if workout exists and belongs to user
+    // Tiek pārbaudīts, vai treniņš eksistē. and belongs to user
     const workout = await WorkoutModel.findById(workoutId);
     if (!workout) {
       return res.status(404).json({
@@ -417,7 +417,7 @@ router.put('/:workoutId/exercises/:exerciseId', authenticateToken, async (req, r
       });
     }
 
-    // Update exercise in workout
+    // Tiek atjaunināts vingrinājums. in workout
     const updated = await WorkoutExerciseModel.update(
       workoutId,
       exerciseId,
@@ -455,14 +455,14 @@ router.put('/:workoutId/exercises/:exerciseId', authenticateToken, async (req, r
 
 /**
  * DELETE /api/workouts/:workoutId/exercises/set/:setId
- * Remove a specific set from a workout exercise (MUST COME BEFORE /:exerciseId route)
+ * Noņem konkrētu setu no treniņa vingrinājuma. Šim maršrutam jāatrodas pirms :exerciseId maršruta.
  */
 router.delete('/:workoutId/exercises/set/:setId', authenticateToken, async (req, res) => {
   try {
     const { workoutId, setId } = req.params;
     const userId = req.user.userId;
 
-    // Check if workout exists and belongs to user
+    // Tiek pārbaudīts, vai treniņš eksistē. and belongs to user
     const workout = await WorkoutModel.findById(workoutId);
     if (!workout) {
       return res.status(404).json({
@@ -478,7 +478,7 @@ router.delete('/:workoutId/exercises/set/:setId', authenticateToken, async (req,
       });
     }
 
-    // Remove exercise set from workout
+    // No treniņa tiek noņemts vingrinājuma sets.
     const removed = await WorkoutExerciseModel.remove(setId);
     if (removed) {
       res.json({
@@ -503,14 +503,14 @@ router.delete('/:workoutId/exercises/set/:setId', authenticateToken, async (req,
 
 /**
  * DELETE /api/workouts/:workoutId/exercises/:exerciseId
- * Remove all sets of an exercise from a workout
+ * Noņem visus konkrētā vingrinājuma setus no treniņa.
  */
 router.delete('/:workoutId/exercises/:exerciseId', authenticateToken, async (req, res) => {
   try {
     const { workoutId, exerciseId } = req.params;
     const userId = req.user.userId;
 
-    // Check if workout exists and belongs to user
+    // Tiek pārbaudīts, vai treniņš eksistē. and belongs to user
     const workout = await WorkoutModel.findById(workoutId);
     if (!workout) {
       return res.status(404).json({
@@ -526,7 +526,7 @@ router.delete('/:workoutId/exercises/:exerciseId', authenticateToken, async (req
       });
     }
 
-    // Get all sets for this exercise and remove them
+    // Tiek iegūti un noņemti visi šī vingrinājuma seti.
     const exerciseData = workout.exercises.find(ex => ex.exercise_id === parseInt(exerciseId));
     if (!exerciseData) {
       return res.status(404).json({
@@ -535,7 +535,7 @@ router.delete('/:workoutId/exercises/:exerciseId', authenticateToken, async (req
       });
     }
 
-    // Delete all sets for this exercise
+    // Tiek dzēsti visi šī vingrinājuma seti.
     for (const set of exerciseData.sets) {
       await WorkoutExerciseModel.remove(set.id);
     }
@@ -557,13 +557,13 @@ router.delete('/:workoutId/exercises/:exerciseId', authenticateToken, async (req
 });
 
 
-// ==================== COMPLETED WORKOUTS ROUTES ====================
+// ==================== Pabeigto treniņu maršruti ====================
 
-// ==================== WORKOUT SESSION ROUTES ====================
+// ==================== Treniņu sesiju maršruti ====================
 
 /**
  * POST /api/workouts/:id/start
- * Start a new workout session
+ * Sāk jaunu treniņa sesiju.
  */
 router.post('/:id/start', authenticateToken, async (req, res) => {
   try {
@@ -620,7 +620,7 @@ router.post('/:id/start', authenticateToken, async (req, res) => {
 
 /**
  * GET /api/workouts/session/ongoing
- * Get the current ongoing workout for the authenticated user
+ * Iegūst autentificētā lietotāja pašreiz aktīvo treniņu.
  */
 router.get('/session/ongoing', authenticateToken, async (req, res) => {
   try {
@@ -655,7 +655,7 @@ router.get('/session/ongoing', authenticateToken, async (req, res) => {
 
 /**
  * GET /api/workouts/session/:sessionId
- * Get an editable workout session with exercise and set logs
+ * Iegūst rediģējamu treniņa sesiju ar vingrinājumu un setu žurnāliem.
  */
 router.get('/session/:sessionId', authenticateToken, async (req, res) => {
   try {
@@ -693,7 +693,7 @@ router.get('/session/:sessionId', authenticateToken, async (req, res) => {
 
 /**
  * POST /api/workouts/session/:sessionId/exercises
- * Add an exercise to an active workout session
+ * Pievieno vingrinājumu aktīvai treniņa sesijai.
  */
 router.post('/session/:sessionId/exercises', authenticateToken, async (req, res) => {
   try {
@@ -768,7 +768,7 @@ router.post('/session/:sessionId/exercises', authenticateToken, async (req, res)
 
 /**
  * PUT /api/workouts/session/exercises/:exerciseLogId
- * Update notes for a session exercise
+ * Atjaunina sesijas vingrinājuma piezīmes.
  */
 router.put('/session/exercises/:exerciseLogId', authenticateToken, async (req, res) => {
   try {
@@ -810,7 +810,7 @@ router.put('/session/exercises/:exerciseLogId', authenticateToken, async (req, r
 
 /**
  * DELETE /api/workouts/session/exercises/:exerciseLogId
- * Remove an exercise and its sets from a session
+ * Noņem vingrinājumu un tā setus no sesijas.
  */
 router.delete('/session/exercises/:exerciseLogId', authenticateToken, async (req, res) => {
   try {
@@ -851,7 +851,7 @@ router.delete('/session/exercises/:exerciseLogId', authenticateToken, async (req
 
 /**
  * POST /api/workouts/session/exercises/:exerciseLogId/sets
- * Add a set to a session exercise
+ * Pievieno setu sesijas vingrinājumam.
  */
 router.post('/session/exercises/:exerciseLogId/sets', authenticateToken, async (req, res) => {
   try {
@@ -900,7 +900,7 @@ router.post('/session/exercises/:exerciseLogId/sets', authenticateToken, async (
 
 /**
  * PUT /api/workouts/session/sets/:setLogId
- * Update a session set
+ * Atjaunina sesijas setu.
  */
 router.put('/session/sets/:setLogId', authenticateToken, async (req, res) => {
   try {
@@ -947,7 +947,7 @@ router.put('/session/sets/:setLogId', authenticateToken, async (req, res) => {
 
 /**
  * DELETE /api/workouts/session/sets/:setLogId
- * Remove a set from a session exercise
+ * Noņem setu no sesijas vingrinājuma.
  */
 router.delete('/session/sets/:setLogId', authenticateToken, async (req, res) => {
   try {
@@ -988,7 +988,7 @@ router.delete('/session/sets/:setLogId', authenticateToken, async (req, res) => 
 
 /**
  * POST /api/workouts/session/:sessionId/complete
- * Complete a workout session
+ * Pabeidz treniņa sesiju.
  */
 router.post('/session/:sessionId/complete', authenticateToken, async (req, res) => {
   try {
@@ -1012,7 +1012,7 @@ router.post('/session/:sessionId/complete', authenticateToken, async (req, res) 
       });
     }
 
-    // Pabeigzam treniņu sesiju
+    // Pabeidzam treniņu sesiju
     if (session.completed_at) {
       return res.status(400).json({
         success: false,
@@ -1099,7 +1099,7 @@ router.post('/session/:sessionId/complete', authenticateToken, async (req, res) 
 
 /**
  * DELETE /api/workouts/session/:sessionId
- * Cancel/delete a workout session
+ * Atceļ vai dzēš treniņa sesiju.
  */
 router.delete('/session/:sessionId', authenticateToken, async (req, res) => {
   try {

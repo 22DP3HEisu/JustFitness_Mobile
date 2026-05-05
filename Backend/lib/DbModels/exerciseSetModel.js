@@ -1,3 +1,5 @@
+// Modelis paredzēts treniņa plānā definēto vingrinājuma setu datubāzes darbībām.
+// Šeit tiek saglabāts setu atkārtojumu skaits, svars, secība un saistība ar konkrētu treniņa vingrinājumu.
 const { db } = require('../database');
 
 class ExerciseSetModel {

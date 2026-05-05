@@ -1,9 +1,9 @@
 const { db } = require('../database');
 
 /**
- * Vingrinājuma (Exercise) model for database operations
+ * Vingrinājuma modelis datubāzes darbībām
  * Izseko vingrinājumus un to saistības ar muskuļu grupām
- * MySQL implementācija
+ * MySQL īstenojums
  */
 class ExerciseModel {
   static tableName = 'exercises';
@@ -167,7 +167,7 @@ class ExerciseModel {
   }
 
   /**
-   * Get muscle groups for an exercise
+   * Iegūst vingrinājumam piesaistītās muskuļu grupas
    */
   static async getMuscleGroups(exerciseId) {
     const sql = `
@@ -187,7 +187,7 @@ class ExerciseModel {
   }
 
   /**
-   * Add muscle group to exercise
+   * Pievieno muskuļu grupu vingrinājumam
    */
   static async addMuscleGroup(exerciseId, muscleGroupId, isPrimary = false) {
     const sql = `
@@ -205,7 +205,7 @@ class ExerciseModel {
   }
 
   /**
-   * Remove muscle group from exercise
+   * Noņem muskuļu grupu no vingrinājuma
    */
   static async removeMuscleGroup(exerciseId, muscleGroupId) {
     const sql = `
@@ -223,7 +223,7 @@ class ExerciseModel {
   }
 
   /**
-   * Update exercise
+   * Atjaunina vingrinājumu
    */
   static async update(id, updates = {}) {
     const {
@@ -251,7 +251,7 @@ class ExerciseModel {
   }
 
   /**
-   * Delete exercise
+   * Dzēš vingrinājumu
    */
   static async delete(id) {
     const sql = `DELETE FROM exercises WHERE id = ?`;

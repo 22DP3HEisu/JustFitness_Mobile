@@ -1,3 +1,5 @@
+// Maršruts apkopo lietotāja paneļa datus par uzturu, treniņiem, soļiem un svaru.
+// Tas sagatavo kopsavilkuma informāciju, kas mobilajā lietotnē tiek rādīta galvenajā ekrānā.
 const express = require('express');
 const { authenticateToken } = require('../lib/auth');
 const MealModel = require('../lib/DbModels/mealModel');

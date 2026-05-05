@@ -86,7 +86,7 @@ const NutritionScreen = () => {
     setSelectionCallback
   } = useSelection();
 
-  // meals is a map of mealId -> { ...mealDef, items: [], backendId: null }
+  // Maltītes tiek glabātas kartē pēc maltītes identifikatora.
   const [meals, setMeals] = useState(MEAL_DEFINITIONS.reduce((acc, m) => ({
     ...acc,
     [m.id]: {
@@ -102,7 +102,7 @@ const NutritionScreen = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // ── Fetch all meals + their foods ──────────────────────────────────────────
+  // ── Tiek iegūtas visas maltītes un tām piesaistītie ēdieni ────────────────
   const fetchNutritionData = async () => {
     if (!isAuthenticated) {
       setIsLoading(false);
@@ -121,7 +121,7 @@ const NutritionScreen = () => {
       }
       const nutrition = data.data || {};
 
-      // Merge backend meal records into our fixed meal slots
+      // Servera maltīšu ieraksti tiek apvienoti ar lietotnes fiksētajām maltīšu sadaļām.
       const updated = MEAL_DEFINITIONS.reduce((acc, def) => {
         const backendMeal = (nutrition.meals || []).find(m => m.name?.toLowerCase() === def.id);
         acc[def.id] = {
@@ -144,7 +144,7 @@ const NutritionScreen = () => {
     fetchNutritionData();
   }, [isAuthenticated, selectedDate]));
 
-  // ── Derived values ─────────────────────────────────────────────────────────
+  // ── Aprēķinātās vērtības ───────────────────────────────────────────────────
   const allMeals = Object.values(meals);
   const waterMl = waterEntries.reduce((sum, entry) => sum + Number(entry.amount_ml || 0), 0);
   const totalMealCalories = allMeals.reduce((sum, meal) => sum + (meal.items ?? []).reduce((s, item) => s + (item.calories_per_100g ?? 0) * (item.quantity ?? 100) / 100, 0), 0);
@@ -165,13 +165,13 @@ const NutritionScreen = () => {
     return sum + caloriesPer100g * portionAmount / 100;
   }, 0);
 
-  // ── Add food ───────────────────────────────────────────────────────────────
+  // ── Ēdiena pievienošana ────────────────────────────────────────────────────
   const openFoodSelection = mealId => {
     setSelectionCallback(async selectedItems => {
       if (!selectedItems || selectedItems.length === 0) return;
       console.log(selectedItems);
       try {
-        // Call API to add foods to the meal (creates meal if it doesn't exist)
+        // Tiek izsaukts API ēdienu pievienošanai maltītei; ja maltīte neeksistē, tā tiek izveidota.
         const {
           data
         } = await authFetch(`/api/meals/${mealId}/foods`, {
@@ -185,7 +185,7 @@ const NutritionScreen = () => {
           })
         });
         if (data.success) {
-          // Update state directly with the returned meal data
+          // Stāvoklis tiek atjaunināts ar servera atgrieztajiem maltītes datiem.
           const updatedMeal = data.data;
           setMeals(prevMeals => ({
             ...prevMeals,
@@ -277,7 +277,7 @@ const NutritionScreen = () => {
     }
   };
 
-  // ── Render ─────────────────────────────────────────────────────────────────
+  // ── Skata renderēšana ───────────────────────────────────────────────────────
   return <View style={styles.container}>
       <StatusBar style="light" />
       <LinearGradient colors={['rgba(58,78,72,0.4)', 'rgba(58,78,72,0.8)', 'rgba(58,78,72,0.97)']} style={styles.overlay}>
@@ -304,7 +304,7 @@ const NutritionScreen = () => {
               </TouchableOpacity>
             </View>
 
-            {/* Macros bar */}
+            {/* Makroelementu josla */}
             <Text style={styles.sectionLabel}>{i18n.t("ui.today_s_macros")}</Text>
             <View style={styles.macrosBar}>
               <View style={[styles.macroSegment, {
@@ -329,7 +329,7 @@ const NutritionScreen = () => {
               </View>
             </View>
 
-            {/* Water tracker */}
+            {/* Ūdens patēriņa uzskaite */}
             <View style={styles.card}>
               <View style={styles.waterHeader}>
                 <Text style={styles.cardLabel}>{i18n.t("ui.water")}</Text>
@@ -377,7 +377,7 @@ const NutritionScreen = () => {
                 </View> : null}
             </View>
 
-            {/* Calories summary */}
+            {/* Kaloriju kopsavilkums */}
             <View style={styles.card}>
               <Text style={styles.cardLabel}>{i18n.t("ui.calories_remaining")}</Text>
               <View style={styles.calorieRow}>
@@ -406,7 +406,7 @@ const NutritionScreen = () => {
               </View>
             </View>
 
-            {/* Meal sections */}
+            {/* Maltīšu sadaļas */}
             {allMeals.map(meal => {
           const mealCals = getMealCalories(meal);
           return <View key={meal.id} style={styles.mealSection}>

@@ -23,7 +23,7 @@ const EditAccountScreen = () => {
     }
   }, [user]);
   const handleSaveAccount = async () => {
-    // Validēē formu
+    // Tiek validēta forma.
     if (!name.trim()) {
       Alert.alert(i18n.t("ui.kluda"), i18n.t("ui.ludzu_ievadiet_vardu"));
       return;
@@ -45,7 +45,7 @@ const EditAccountScreen = () => {
         })
       });
       if (response.ok) {
-        // Atjaunina lietotāja datus kontekstā
+        // Lietotāja dati tiek atjaunināti kontekstā.
         await updateUser({
           ...user,
           name: name.trim(),
@@ -64,7 +64,7 @@ const EditAccountScreen = () => {
   return <SafeAreaView style={styles.container}>
       <StatusBar style="light" />
       <LinearGradient colors={['rgba(58, 78, 72, 0.4)', 'rgba(58, 78, 72, 0.8)', 'rgba(58, 78, 72, 0.95)']} style={styles.overlay}>
-        {/* Virsraksts */}
+        {/* Virsraksta zona */}
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()}>
             <MaterialIcons name="arrow-back" size={28} color="#FFFFFF" />
@@ -76,11 +76,11 @@ const EditAccountScreen = () => {
         </View>
 
         <ScrollView style={styles.scrollContainer} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-          {/* Konta dati sekcija */}
+          {/* Konta datu sadaļa */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>{i18n.t("ui.konta_informacija")}</Text>
 
-            {/* Vārda lauks */}
+            {/* Vārda ievades lauks */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>{i18n.t("ui.vards")}</Text>
               <View style={styles.inputContainer}>
@@ -89,7 +89,7 @@ const EditAccountScreen = () => {
               </View>
             </View>
 
-            {/* E-pasta lauks */}
+            {/* E-pasta ievades lauks */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>{i18n.t("ui.email_2")}</Text>
               <View style={styles.inputContainer}>
@@ -98,7 +98,7 @@ const EditAccountScreen = () => {
               </View>
             </View>
 
-            {/* Saglabāt konta datus pogu */}
+            {/* Konta datu saglabāšanas poga */}
             <TouchableOpacity style={[styles.actionButton, isSaving && styles.disabledButton]} onPress={handleSaveAccount} disabled={isSaving}>
               {isSaving ? <ActivityIndicator color="#2C3E50" /> : <>
                   <MaterialIcons name="save" size={20} color="#2C3E50" style={{

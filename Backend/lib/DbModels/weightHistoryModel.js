@@ -1,7 +1,7 @@
 const { db } = require('../database');
 
 /**
- * Svara_vesture (Weight History) model for database operations
+ * Svara_vesture modelis datubāzes darbībām
  * Izseko lietotāja svara izmaiņas laika gaitā
  */
 class WeightHistoryModel {
@@ -97,17 +97,17 @@ class WeightHistoryModel {
 
     switch (period) {
         case "week": 
-            // Latest entry for each of the last 7 days
+            // Tiek iegūts jaunākais ieraksts katrai no pēdējām 7 dienām.
             interval = "7 DAY";
             relativePartition = "DATEDIFF(CURRENT_DATE(), created_at)"; 
             break;
         case "month": 
-            // Latest entry of every 7-day block for the last month
+            // Tiek iegūts jaunākais ieraksts katram 7 dienu posmam pēdējā mēnesī.
             interval = "1 MONTH";
             relativePartition = "FLOOR(DATEDIFF(CURRENT_DATE(), created_at) / 7)";
             break;
         case "year": 
-            // Latest entry of every month for the last year
+            // Tiek iegūts jaunākais ieraksts katram mēnesim pēdējā gadā.
             interval = "1 YEAR";
             relativePartition = "FLOOR(DATEDIFF(CURRENT_DATE(), created_at) / 60)";
             break;

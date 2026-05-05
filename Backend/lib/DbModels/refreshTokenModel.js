@@ -1,3 +1,5 @@
+// Modelis nodrošina atjaunošanas tokenu saglabāšanu, pārbaudi un dzēšanu.
+// Tas ļauj lietotājam palikt autorizētam vairākās ierīcēs un droši atjaunot piekļuves tokenu.
 const crypto = require('crypto');
 const { db } = require('../database');
 

@@ -1,3 +1,5 @@
+// Komponente nodrošina saraksta ieraksta dzēšanu ar pavilkšanas žestu.
+// Tā apvieno animāciju, apstiprināšanas darbību un dzēšanas pogu, lai sarakstu pārvaldība būtu ērtāka mobilajā vidē.
 import i18n from "../../lib/i18n";
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import React, { useRef } from 'react';

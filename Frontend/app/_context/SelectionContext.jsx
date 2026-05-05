@@ -3,24 +3,24 @@ import React, { createContext, useContext, useRef, useCallback } from 'react'
 const SelectionContext = createContext(null)
 
 /**
- * Simple selection context - only stores the callback function.
- * Config is passed via route params to avoid timing issues.
+ * Izvēles konteksts glabā tikai atzvanes funkciju.
+ * Konfigurācija tiek padota ar maršruta parametriem, lai izvairītos no laika secības problēmām.
  */
 export const SelectionProvider = ({ children }) => {
-  // Store callbacks in a stack so nested selection flows do not overwrite their parent.
+  // Atzvanes funkcijas tiek glabātas stekā, lai ligzdotas izvēles nepārrakstītu iepriekšējo izvēli.
   const callbackStackRef = useRef([])
   
   /**
-   * Set the selection callback before navigating
-   * @param {Function} callback - Function to call with selected items
+   * Pirms navigācijas tiek iestatīta izvēles atzvanes funkcija.
+   * @param {Function} callback - funkcija, kas tiek izsaukta ar izvēlētajiem ierakstiem.
    */
   const setSelectionCallback = useCallback((callback) => {
     callbackStackRef.current = [...callbackStackRef.current, callback]
   }, [])
   
   /**
-   * Fire the callback with selected items and clear it
-   * @param {Array} selectedItems - Array of selected item objects
+   * Tiek izsaukta atzvanes funkcija ar izvēlētajiem ierakstiem un pēc tam notīrīta.
+   * @param {Array} selectedItems - izvēlēto ierakstu objektu masīvs.
    */
   const confirmSelection = useCallback((selectedItems) => {
     const callback = callbackStackRef.current[callbackStackRef.current.length - 1]
@@ -32,7 +32,7 @@ export const SelectionProvider = ({ children }) => {
   }, [])
   
   /**
-   * Clear callback without firing (user cancelled)
+   * Atzvanes funkcija tiek notīrīta bez izsaukšanas, ja lietotājs atceļ darbību.
    */
   const cancelSelection = useCallback(() => {
     callbackStackRef.current = callbackStackRef.current.slice(0, -1)

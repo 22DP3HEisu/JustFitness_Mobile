@@ -27,7 +27,7 @@ const CreateExerciseScreen = () => {
       if (selectedItems.length > 0) {
         const selected = selectedItems[0];
         setPrimaryMuscleGroup(selected);
-        // Remove from secondary if it was there
+        // Ja izvēlētā grupa bija papildu grupās, tā tiek no tām noņemta.
         setSecondaryMuscleGroups(prev => prev.filter(mg => mg.id !== selected.id));
       }
     });
@@ -103,7 +103,7 @@ const CreateExerciseScreen = () => {
   return <View style={styles.container}>
       <StatusBar style="light" />
       <LinearGradient colors={['rgba(58, 78, 72, 0.95)', 'rgba(58, 78, 72, 1)']} style={styles.overlay}>
-        {/* Header */}
+        {/* Virsraksta zona */}
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
             <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
@@ -114,24 +114,24 @@ const CreateExerciseScreen = () => {
 
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.keyboardView}>
           <ScrollView style={styles.content} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-            {/* Icon */}
+            {/* Ikona */}
             <View style={styles.iconContainer}>
               <MaterialCommunityIcons name="dumbbell" size={48} color="#F5C842" />
             </View>
 
-            {/* Exercise Name */}
+            {/* Vingrinājuma nosaukums */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>{i18n.t("ui.exercise_name")}</Text>
               <TextInput style={[styles.input, focusedField === 'name' && styles.inputFocused]} placeholder={i18n.t("ui.e_g_bench_press_squats_pull_ups")} placeholderTextColor="rgba(255, 255, 255, 0.4)" value={name} onChangeText={setName} onFocus={() => setFocusedField('name')} onBlur={() => setFocusedField(null)} />
             </View>
 
-            {/* Description */}
+            {/* Apraksts */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>{i18n.t("ui.description_optional")}</Text>
               <TextInput style={[styles.input, styles.textArea, focusedField === 'description' && styles.inputFocused]} placeholder={i18n.t("ui.how_to_perform_this_exercise")} placeholderTextColor="rgba(255, 255, 255, 0.4)" value={description} onChangeText={setDescription} onFocus={() => setFocusedField('description')} onBlur={() => setFocusedField(null)} multiline numberOfLines={4} textAlignVertical="top" />
             </View>
 
-            {/* Primary Muscle Group */}
+            {/* Galvenā muskuļu grupa */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>{i18n.t("ui.primary_muscle_group_2")}</Text>
               <TouchableOpacity style={styles.selectorField} onPress={openPrimarySelection}>
@@ -151,7 +151,7 @@ const CreateExerciseScreen = () => {
               </TouchableOpacity>
             </View>
 
-            {/* Secondary Muscle Groups */}
+            {/* Papildu muskuļu grupas */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>{i18n.t("ui.secondary_muscle_groups_optional")}</Text>
               <TouchableOpacity style={styles.selectorField} onPress={openSecondarySelection}>
@@ -161,7 +161,7 @@ const CreateExerciseScreen = () => {
                 <Ionicons name="chevron-forward" size={20} color="rgba(255, 255, 255, 0.5)" />
               </TouchableOpacity>
               
-              {/* Selected secondary muscle groups tags */}
+              {/* Izvēlēto papildu muskuļu grupu atzīmes */}
               {secondaryMuscleGroups.length > 0 && <View style={styles.tagsContainer}>
                   {secondaryMuscleGroups.map(mg => <View key={mg.id} style={styles.tag}>
                       <Text style={styles.tagText}>{mg.name}</Text>
@@ -185,13 +185,13 @@ const CreateExerciseScreen = () => {
             }} thumbColor={isPublic ? '#F5C842' : '#FFFFFF'} />
             </View>
 
-            {/* Info Card */}
+            {/* Informatīvais bloks */}
             <View style={styles.infoCard}>
               <Ionicons name="information-circle" size={24} color="#F5C842" />
               <Text style={styles.infoText}>{i18n.t("ui.this_exercise_will_be_available_to_add_to_any_of_your_w")}</Text>
             </View>
 
-            {/* Create Button */}
+            {/* Izveides poga */}
             <TouchableOpacity style={[styles.createButton, isLoading && styles.createButtonDisabled]} onPress={handleCreate} disabled={isLoading}>
               {isLoading ? <ActivityIndicator color="#2C3E50" /> : <>
                   <Ionicons name="checkmark-circle" size={24} color="#2C3E50" />

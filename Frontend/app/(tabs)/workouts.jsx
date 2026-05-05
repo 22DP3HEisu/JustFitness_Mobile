@@ -1,3 +1,5 @@
+// Treniņu sadaļas skats pārvalda treniņu plānus un aktīvās treniņu sesijas.
+// Lietotājs šajā skatā var apskatīt, izveidot, sākt un turpināt savus treniņus.
 import i18n from "../../lib/i18n";
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import { StatusBar } from 'expo-status-bar';

@@ -1,3 +1,5 @@
+// Modālais logs nodrošina svara izvēli ar decimālo daļu un izvēlēto mērvienību.
+// Komponente ļauj precīzi ievadīt svaru kilogramos vai mārciņās un nodod izvēlēto vērtību atpakaļ formai.
 import i18n from "../../lib/i18n";
 import { Modal, Pressable, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Picker } from '@react-native-picker/picker';

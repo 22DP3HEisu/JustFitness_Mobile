@@ -79,7 +79,7 @@ router.put("/", authenticateToken, async (req, res) => {
     const userId = req.user.userId;
     const { name, email } = req.body;
 
-    // Validācijai
+    // Tiek veikta validācija
     if (!name || !email) {
       return res.status(400).json({
         success: false,
@@ -122,7 +122,7 @@ router.post("/change-password", authenticateToken, async (req, res) => {
     const userId = req.user.userId;
     const { oldPassword, newPassword, confirmPassword } = req.body;
 
-    // Validācijai
+    // Tiek veikta validācija
     if (!oldPassword || !newPassword || !confirmPassword) {
       return res.status(400).json({
         success: false,
@@ -155,7 +155,7 @@ router.post("/change-password", authenticateToken, async (req, res) => {
       });
     }
 
-    // Pārbauda seno paroli
+    // Tiek pārbaudīta vecā parole
     const isValidPassword = await AuthService.comparePassword(oldPassword, user.password);
     if (!isValidPassword) {
       return res.status(401).json({
@@ -173,7 +173,7 @@ router.post("/change-password", authenticateToken, async (req, res) => {
       });
     }
 
-    // Hash jaunā parole
+    // Tiek šifrēta jaunā parole
     const hashedPassword = await AuthService.hashPassword(newPassword);
 
     // Atjaunina paroli datubāzē

@@ -1,3 +1,5 @@
+// Administratora saraksta skats attēlo lietotājus ar meklēšanas un statusa filtriem.
+// Tas palīdz administratoram ātri atrast vajadzīgo lietotāju un pāriet uz detalizētu pārvaldības skatu.
 import i18n from "../lib/i18n";
 import { StyleSheet, Text, View, TouchableOpacity, FlatList, ActivityIndicator, TextInput } from 'react-native';
 import { StatusBar } from 'expo-status-bar';

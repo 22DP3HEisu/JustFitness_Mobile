@@ -1,3 +1,5 @@
+// Sākuma skats novirza lietotāju uz lietotni vai publisko muskuļu grupu katalogu.
+// Tas darbojas kā ievade sistēmā, piedāvājot turpināt uz autentifikāciju vai apskatīt publisko informāciju.
 import i18n from "../lib/i18n";
 import { StyleSheet, Text, View, ImageBackground, TouchableOpacity, Dimensions } from 'react-native';
 import { StatusBar } from 'expo-status-bar';

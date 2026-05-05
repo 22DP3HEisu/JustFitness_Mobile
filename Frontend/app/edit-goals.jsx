@@ -136,7 +136,7 @@ const EditGoalsScreen = () => {
   return <SafeAreaView style={styles.container}>
       <StatusBar style="light" />
       <LinearGradient colors={['rgba(58, 78, 72, 0.4)', 'rgba(58, 78, 72, 0.8)', 'rgba(58, 78, 72, 0.95)']} style={styles.overlay}>
-        {/* Virsraksts */}
+        {/* Virsraksta zona */}
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()}>
             <MaterialIcons name="arrow-back" size={28} color="#FFFFFF" />
@@ -148,7 +148,7 @@ const EditGoalsScreen = () => {
         </View>
 
         <ScrollView style={styles.scrollContainer} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-          {/* Svara mērķis */}
+          {/* Svara mērķa sadaļa */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>{i18n.t("ui.svara_merkis")}</Text>
             <View style={styles.inputGroup}>
@@ -164,7 +164,7 @@ const EditGoalsScreen = () => {
             </View>
           </View>
 
-          {/* Uztura mērķi */}
+          {/* Uztura mērķu sadaļa */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>{i18n.t("ui.uztura_merki")}</Text>
             
@@ -188,7 +188,7 @@ const EditGoalsScreen = () => {
           </View>
         </ScrollView>
 
-        {/* Saglabāt pogu */}
+        {/* Saglabāšanas poga */}
         <View style={styles.footer}>
           <TouchableOpacity style={[styles.saveButton, isSaving && styles.disabledButton]} onPress={handleSave} disabled={isSaving}>
             {isSaving ? <ActivityIndicator color="#2C3E50" /> : <Text style={styles.saveButtonText}>{i18n.t("ui.saglabat_merkus")}</Text>}

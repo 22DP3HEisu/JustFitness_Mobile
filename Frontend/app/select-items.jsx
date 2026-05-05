@@ -9,7 +9,7 @@ import { useAuth } from './_context/AuthContext';
 import { useSelection } from './_context/SelectionContext';
 
 /**
- * Item type configurations - easily extensible for new types
+ * Ierakstu tipu konfigurācija ir veidota tā, lai to varētu viegli paplašināt ar jauniem tipiem.
  */
 const ITEM_TYPE_CONFIG = {
   exercise: {
@@ -88,7 +88,7 @@ const SelectItemsScreen = () => {
     cancelSelection
   } = useSelection();
 
-  // Parse params (guaranteed to exist on mount)
+  // Tiek apstrādāti maršruta parametri, kas pieejami komponentes ielādes brīdī.
   const type = params.type || 'muscleGroup';
   const mode = params.mode || 'single';
   const title = params.title;
@@ -104,11 +104,11 @@ const SelectItemsScreen = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedMuscleGroupIds, setSelectedMuscleGroupIds] = useState([]);
 
-  // For types with quantity: store as { id, quantity }, otherwise just IDs
+  // Tipiem ar daudzumu tiek glabāts identifikators un daudzums, pārējiem tipiem tikai identifikatori.
   const [selectedIds, setSelectedIds] = useState(initialSelected);
-  const [quantities, setQuantities] = useState({}); // { [itemId]: quantity }
+  const [quantities, setQuantities] = useState({}); // Daudzumi tiek glabāti pēc ieraksta identifikatora.
 
-  // Fetch items when screen gains focus (including after creating new item)
+  // Ieraksti tiek iegūti, kad skats kļūst aktīvs, arī pēc jauna ieraksta izveides.
   useFocusEffect(useCallback(() => {
     fetchItems();
   }, []));
@@ -168,14 +168,14 @@ const SelectItemsScreen = () => {
   };
   const handleConfirm = () => {
     if (typeConfig.supportsQuantity) {
-      // Return items with quantities
+      // Tiek atgriezti ieraksti ar daudzumiem.
       const selectedItems = items.filter(item => selectedIds.includes(item.id)).map(item => ({
         ...item,
         quantity: quantities[item.id] || typeConfig.defaultQuantity
       }));
       confirmSelection(selectedItems);
     } else {
-      // Return items without quantities
+      // Tiek atgriezti ieraksti bez daudzumiem.
       const selectedItems = items.filter(item => selectedIds.includes(item.id));
       confirmSelection(selectedItems);
     }
@@ -265,7 +265,7 @@ const SelectItemsScreen = () => {
             </View>}
         </TouchableOpacity>
         
-        {/* Quantity input - only show for selected items with quantity support */}
+        {/* Daudzuma ievade tiek rādīta tikai izvēlētiem ierakstiem ar daudzuma atbalstu */}
         {isSelected && typeConfig.supportsQuantity && <View style={styles.quantityContainer}>
             <Text style={styles.quantityLabel}>{i18n.t("ui.portion")}</Text>
             <View style={styles.quantityInputWrapper}>
@@ -282,7 +282,7 @@ const SelectItemsScreen = () => {
               </TouchableOpacity>
             </View>
             
-            {/* Show calculated calories if available */}
+            {/* Aprēķinātās kalorijas tiek rādītas, ja tās ir pieejamas */}
             {item.calories_per_100g && <Text style={styles.calculatedCalories}>
                 ≈ {Math.round(item.calories_per_100g * quantity / 100)}{i18n.t("ui.kcal")}</Text>}
           </View>}
@@ -291,7 +291,7 @@ const SelectItemsScreen = () => {
   return <View style={styles.container}>
       <StatusBar style="light" />
       <LinearGradient colors={['rgba(58, 78, 72, 0.95)', 'rgba(58, 78, 72, 1)']} style={styles.overlay}>
-        {/* Header */}
+        {/* Virsraksta zona */}
         <View style={styles.header}>
           <TouchableOpacity onPress={handleCancel} style={styles.headerButton}>
             <Ionicons name="close" size={24} color="#FFFFFF" />
@@ -304,7 +304,7 @@ const SelectItemsScreen = () => {
           </TouchableOpacity>
         </View>
 
-        {/* Search */}
+        {/* Meklēšanas sadaļa */}
         <View style={styles.searchContainer}>
           <Ionicons name="search" size={20} color="rgba(255, 255, 255, 0.5)" />
           <TextInput style={styles.searchInput} placeholder={searchPlaceholder} placeholderTextColor="rgba(255, 255, 255, 0.4)" value={searchQuery} onChangeText={setSearchQuery} />
@@ -329,7 +329,7 @@ const SelectItemsScreen = () => {
             </ScrollView>
           </View> : null}
 
-        {/* Content */}
+        {/* Satura sadaļa */}
         {isLoading ? <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color="#F5C842" />
             <Text style={styles.loadingText}>{i18n.t("ui.loading")}</Text>

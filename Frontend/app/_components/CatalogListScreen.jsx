@@ -1,3 +1,5 @@
+// Koplietojama kataloga komponente sarakstu attēlošanai ar meklēšanu un filtriem.
+// Tā tiek izmantota ēdienu un vingrinājumu katalogos, lai vienā stilā rādītu sarakstu, tukšos stāvokļus un filtrēšanu.
 import i18n from "../../lib/i18n";
 import { StyleSheet, Text, View, TextInput, TouchableOpacity, FlatList, ActivityIndicator, ScrollView } from 'react-native';
 import { StatusBar } from 'expo-status-bar';

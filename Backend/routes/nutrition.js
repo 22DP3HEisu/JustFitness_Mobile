@@ -1,3 +1,5 @@
+// Maršruts sagatavo izvēlētās dienas uztura un ūdens patēriņa pārskatu.
+// Dati tiek izmantoti, lai lietotājs varētu redzēt kaloriju, makroelementu un ūdens mērķu progresu.
 const express = require('express');
 const { authenticateToken } = require('../lib/auth');
 const MealModel = require('../lib/DbModels/mealModel');

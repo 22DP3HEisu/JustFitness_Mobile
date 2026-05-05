@@ -11,7 +11,7 @@ const isAdminRequest = async (req) => {
 
 /**
  * GET /api/exercises
- * Get all exercises
+ * Iegūst visus lietotājam pieejamos vingrinājumus.
  */
 router.get('/', authenticateToken, async (req, res) => {
   try {
@@ -33,7 +33,7 @@ router.get('/', authenticateToken, async (req, res) => {
 
 /**
  * GET /api/exercises/:id
- * Get a specific exercise by ID
+ * Iegūst konkrētu vingrinājumu pēc identifikatora.
  */
 router.get('/:id', authenticateToken, async (req, res) => {
   try {
@@ -117,15 +117,15 @@ router.get('/:id/weight-history', authenticateToken, async (req, res) => {
 
 /**
  * POST /api/exercises
- * Create a new exercise
- * Required fields: name
- * Optional fields: description, primaryMuscleGroupId, secondaryMuscleGroupIds
+ * Izveido jaunu vingrinājumu.
+ * Obligātais lauks: name.
+ * Neobligātie lauki: description, primaryMuscleGroupId, secondaryMuscleGroupIds.
  */
 router.post('/', authenticateToken, async (req, res) => {
   try {
     const { name, description, primaryMuscleGroupId, secondaryMuscleGroupIds, isPublic } = req.body;
 
-    // Validate required fields
+    // Tiek pārbaudīti obligātie lauki.
     if (!name || name.trim().length === 0) {
       return res.status(400).json({
         success: false,
@@ -141,7 +141,7 @@ router.post('/', authenticateToken, async (req, res) => {
       isPublic === true
     );
 
-    // Link primary muscle group if provided
+    // Ja padota galvenā muskuļu grupa, tā tiek piesaistīta vingrinājumam.
     if (primaryMuscleGroupId) {
       try {
         await ExerciseModel.addMuscleGroup(exercise.id, primaryMuscleGroupId, true);
@@ -150,10 +150,10 @@ router.post('/', authenticateToken, async (req, res) => {
       }
     }
 
-    // Link secondary muscle groups if provided
+    // Ja padotas papildu muskuļu grupas, tās tiek piesaistītas vingrinājumam.
     if (secondaryMuscleGroupIds && Array.isArray(secondaryMuscleGroupIds) && secondaryMuscleGroupIds.length > 0) {
       for (const muscleGroupId of secondaryMuscleGroupIds) {
-        // Skip if same as primary
+        // Ieraksts tiek izlaists, ja tas sakrīt ar galveno muskuļu grupu.
         if (muscleGroupId === primaryMuscleGroupId) continue;
         try {
           await ExerciseModel.addMuscleGroup(exercise.id, muscleGroupId, false);
@@ -163,7 +163,7 @@ router.post('/', authenticateToken, async (req, res) => {
       }
     }
 
-    // Refresh exercise to get updated muscle groups
+    // Vingrinājuma dati tiek atkārtoti iegūti ar atjauninātajām muskuļu grupām.
     const updatedExercise = await ExerciseModel.findById(exercise.id);
     return res.status(201).json({
       success: true,
@@ -173,7 +173,7 @@ router.post('/', authenticateToken, async (req, res) => {
   } catch (error) {
     console.error('Error creating exercise:', error);
     
-    // Handle duplicate name error
+    // Tiek apstrādāta nosaukuma dublēšanās kļūda.
     if (error.code === 'ER_DUP_ENTRY') {
       return res.status(409).json({
         success: false,
@@ -191,14 +191,14 @@ router.post('/', authenticateToken, async (req, res) => {
 
 /**
  * PUT /api/exercises/:id
- * Update an exercise
+ * Atjaunina vingrinājuma datus.
  */
 router.put('/:id', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
     const { name, description, primaryMuscleGroupId, secondaryMuscleGroupIds, isPublic } = req.body;
 
-    // Check if exercise exists
+    // Tiek pārbaudīts, vai vingrinājums eksistē.
     const exercise = await ExerciseModel.findById(id);
     if (!exercise) {
       return res.status(404).json({
@@ -223,7 +223,7 @@ router.put('/:id', authenticateToken, async (req, res) => {
       });
     }
 
-    // Update exercise
+    // Tiek atjaunināts vingrinājums.
     const updated = await ExerciseModel.update(id, {
       name: name !== undefined ? name.trim() : exercise.name,
       description: description !== undefined ? description : exercise.description,
@@ -262,13 +262,13 @@ router.put('/:id', authenticateToken, async (req, res) => {
 
 /**
  * DELETE /api/exercises/:id
- * Delete an exercise
+ * Dzēš vingrinājumu.
  */
 router.delete('/:id', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Check if exercise exists
+    // Tiek pārbaudīts, vai vingrinājums eksistē.
     const exercise = await ExerciseModel.findById(id);
     if (!exercise) {
       return res.status(404).json({
@@ -286,7 +286,7 @@ router.delete('/:id', authenticateToken, async (req, res) => {
       });
     }
 
-    // Delete exercise
+    // Tiek dzēsts vingrinājums.
     const deleted = await ExerciseModel.delete(id);
     if (deleted) {
       res.json({
@@ -311,13 +311,13 @@ router.delete('/:id', authenticateToken, async (req, res) => {
 
 /**
  * POST /api/exercises/:id/muscle-groups/:muscleGroupId
- * Add a muscle group to an exercise
+ * Pievieno muskuļu grupu vingrinājumam.
  */
 router.post('/:id/muscle-groups/:muscleGroupId', authenticateToken, async (req, res) => {
   try {
     const { id, muscleGroupId } = req.params;
 
-    // Check if exercise exists
+    // Tiek pārbaudīts, vai vingrinājums eksistē.
     const exercise = await ExerciseModel.findById(id);
     if (!exercise) {
       return res.status(404).json({
@@ -333,7 +333,7 @@ router.post('/:id/muscle-groups/:muscleGroupId', authenticateToken, async (req, 
       });
     }
 
-    // Add muscle group
+    // Tiek pievienota muskuļu grupa.
     await ExerciseModel.addMuscleGroup(id, muscleGroupId);
 
     const updatedExercise = await ExerciseModel.findById(id);
@@ -362,13 +362,13 @@ router.post('/:id/muscle-groups/:muscleGroupId', authenticateToken, async (req, 
 
 /**
  * DELETE /api/exercises/:id/muscle-groups/:muscleGroupId
- * Remove a muscle group from an exercise
+ * Noņem muskuļu grupu no vingrinājuma.
  */
 router.delete('/:id/muscle-groups/:muscleGroupId', authenticateToken, async (req, res) => {
   try {
     const { id, muscleGroupId } = req.params;
 
-    // Check if exercise exists
+    // Tiek pārbaudīts, vai vingrinājums eksistē.
     const exercise = await ExerciseModel.findById(id);
     if (!exercise) {
       return res.status(404).json({
@@ -384,7 +384,7 @@ router.delete('/:id/muscle-groups/:muscleGroupId', authenticateToken, async (req
       });
     }
 
-    // Remove muscle group
+    // Tiek noņemta muskuļu grupa.
     const removed = await ExerciseModel.removeMuscleGroup(id, muscleGroupId);
     if (removed) {
       const updatedExercise = await ExerciseModel.findById(id);

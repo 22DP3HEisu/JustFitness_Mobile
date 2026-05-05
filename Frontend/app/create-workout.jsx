@@ -27,11 +27,11 @@ const CreateWorkoutScreen = () => {
   const [focusedField, setFocusedField] = useState(null);
   const [isLoadingExisting, setIsLoadingExisting] = useState(!!workoutId);
 
-  // Exercises state - each exercise has an array of sets
+  // Vingrinājumu stāvoklī katram vingrinājumam ir setu masīvs.
   const [exercises, setExercises] = useState([]);
   const [originalExercises, setOriginalExercises] = useState([]);
 
-  // Load existing workout data if editing
+  // Rediģēšanas režīmā tiek ielādēti esošie treniņa dati.
   useEffect(() => {
     if (workoutId) {
       loadWorkoutData(workoutId);
@@ -47,7 +47,7 @@ const CreateWorkoutScreen = () => {
         setName(workout.name || '');
         setDescription(workout.description || '');
 
-        // Map existing exercises with their sets
+        // Esošie vingrinājumi tiek sasaistīti ar to setiem.
         if (workout.exercises && Array.isArray(workout.exercises)) {
           const mappedExercises = workout.exercises.map(ex => ({
             id: ex.exercise_id,
@@ -87,7 +87,7 @@ const CreateWorkoutScreen = () => {
             id: 1,
             reps: '10',
             weight: ''
-          }] // Start with one empty set
+          }] // Sākotnēji tiek izveidots viens tukšs sets.
         }));
         setExercises(prev => [...prev, ...newExercises]);
       }
@@ -125,7 +125,7 @@ const CreateWorkoutScreen = () => {
   const handleRemoveSet = (exerciseTempId, setId) => {
     setExercises(exercises.map(ex => {
       if (ex.tempId === exerciseTempId) {
-        // Don't allow removing the last set
+        // Pēdējo setu nav atļauts noņemt.
         if (ex.sets.length <= 1) return ex;
         return {
           ...ex,
@@ -160,7 +160,7 @@ const CreateWorkoutScreen = () => {
       return;
     }
 
-    // Build exercises array once, used for both create and update
+    // Vingrinājumu masīvs tiek izveidots vienreiz un izmantots gan izveidei, gan atjaunināšanai.
     const exercisesPayload = exercises.map((exercise, index) => ({
       exercise_id: exercise.id,
       order_index: index,
@@ -174,7 +174,7 @@ const CreateWorkoutScreen = () => {
     setIsLoading(true);
     try {
       if (workoutId) {
-        // Update existing workout — send name, description, and all exercises in one request
+        // Esošs treniņš tiek atjaunināts, vienā pieprasījumā nosūtot nosaukumu, aprakstu un visus vingrinājumus.
         const {
           data: updateData
         } = await authFetch(`/api/workouts/${workoutId}`, {
@@ -190,7 +190,7 @@ const CreateWorkoutScreen = () => {
           return;
         }
       } else {
-        // Create new workout — send name, description, and all exercises in one request
+        // Jauns treniņš tiek izveidots, vienā pieprasījumā nosūtot nosaukumu, aprakstu un visus vingrinājumus.
         const {
           data: workoutData
         } = await authFetch('/api/workouts', {
@@ -228,7 +228,7 @@ const CreateWorkoutScreen = () => {
     </SwipeToDelete>;
   const renderSelectedExercise = (exercise, index) => <SwipeToDelete key={exercise.tempId} onDelete={() => handleRemoveExercise(exercise.tempId)} actionWidth={EXERCISE_DELETE_WIDTH} containerStyle={styles.exerciseSwipeContainer} showLabel>
       <View style={styles.selectedExercise}>
-      {/* Exercise Header */}
+      {/* Vingrinājuma virsraksts */}
       <View style={styles.exerciseHeader}>
         <View style={styles.exerciseNumber}>
           <Text style={styles.exerciseNumberText}>{index + 1}</Text>
@@ -241,7 +241,7 @@ const CreateWorkoutScreen = () => {
         </View>
       </View>
 
-      {/* Sets Header */}
+      {/* Setu virsraksts */}
       <View style={styles.setsHeader}>
         <View style={styles.setsHeaderSetCol}>
           <Text style={styles.setsHeaderText}>{i18n.t("ui.set")}</Text>
@@ -250,12 +250,12 @@ const CreateWorkoutScreen = () => {
         <Text style={styles.setsHeaderLabel}>{i18n.t("ui.weight")}</Text>
       </View>
 
-      {/* Sets List */}
+      {/* Setu saraksts */}
       <View style={styles.setsList}>
         {exercise.sets.map((set, setIndex) => renderSet(exercise.tempId, set, setIndex, exercise.sets.length))}
       </View>
 
-      {/* Add Set Button */}
+      {/* Seta pievienošanas poga */}
       <TouchableOpacity style={styles.addSetButton} onPress={() => handleAddSet(exercise.tempId)}>
         <Ionicons name="add" size={18} color="#F5C842" />
         <Text style={styles.addSetButtonText}>{i18n.t("ui.add_set")}</Text>
@@ -265,7 +265,7 @@ const CreateWorkoutScreen = () => {
   return <View style={styles.container}>
       <StatusBar style="light" />
       <LinearGradient colors={['rgba(58, 78, 72, 0.95)', 'rgba(58, 78, 72, 1)']} style={styles.overlay}>
-        {/* Header */}
+        {/* Virsraksta zona */}
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
             <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
@@ -279,19 +279,19 @@ const CreateWorkoutScreen = () => {
             <Text style={styles.loadingText}>{i18n.t("ui.loading_workout")}</Text>
           </View> : <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.keyboardView}>
           <ScrollView style={styles.content} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-            {/* Workout Name */}
+            {/* Treniņa nosaukums */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>{i18n.t("ui.workout_name")}</Text>
               <TextInput style={[styles.input, focusedField === 'name' && styles.inputFocused]} placeholder={i18n.t("ui.e_g_upper_body_leg_day_full_body")} placeholderTextColor="rgba(255, 255, 255, 0.4)" value={name} onChangeText={setName} onFocus={() => setFocusedField('name')} onBlur={() => setFocusedField(null)} />
             </View>
 
-            {/* Description */}
+            {/* Apraksts */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>{i18n.t("ui.description_optional")}</Text>
               <TextInput style={[styles.input, styles.textArea, focusedField === 'description' && styles.inputFocused]} placeholder={i18n.t("ui.add_notes_about_this_workout")} placeholderTextColor="rgba(255, 255, 255, 0.4)" value={description} onChangeText={setDescription} onFocus={() => setFocusedField('description')} onBlur={() => setFocusedField(null)} multiline numberOfLines={3} textAlignVertical="top" />
             </View>
 
-            {/* Exercises Section */}
+            {/* Vingrinājumu sadaļa */}
             <View style={styles.exercisesSection}>
               <View style={styles.sectionHeader}>
                 <Text style={styles.label}>{i18n.t("ui.exercises")}</Text>
@@ -310,7 +310,7 @@ const CreateWorkoutScreen = () => {
                 </View>}
             </View>
 
-            {/* Create/Update Button */}
+            {/* Izveides vai atjaunināšanas poga */}
             <TouchableOpacity style={[styles.createButton, isLoading && styles.createButtonDisabled]} onPress={handleCreate} disabled={isLoading}>
               {isLoading ? <ActivityIndicator color="#2C3E50" /> : <>
                   <Ionicons name="checkmark-circle" size={24} color="#2C3E50" />
@@ -479,7 +479,7 @@ const styles = StyleSheet.create({
     color: 'rgba(245, 200, 66, 0.8)',
     marginTop: 2
   },
-  // Sets section
+  // Setu sadaļa.
   setsHeader: {
     flexDirection: 'row',
     alignItems: 'center',

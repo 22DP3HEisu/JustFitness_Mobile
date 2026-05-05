@@ -1,3 +1,5 @@
+// Publiskais skats attēlo sistēmā pieejamās muskuļu grupas.
+// Lietotājs var apskatīt muskuļu grupu nosaukumus un aprakstus arī bez pieslēgšanās savam kontam.
 import i18n from "../lib/i18n";
 import { StyleSheet, Text, View, TouchableOpacity, FlatList, ActivityIndicator } from 'react-native';
 import { StatusBar } from 'expo-status-bar';

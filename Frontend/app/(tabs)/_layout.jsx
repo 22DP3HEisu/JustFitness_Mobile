@@ -1,3 +1,5 @@
+// Komponente definē galveno apakšējās navigācijas cilņu izkārtojumu.
+// Šeit tiek noteiktas lietotnes galvenās sadaļas, to ikonas un pāreja starp ekrāniem.
 import i18n from "../../lib/i18n";
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';

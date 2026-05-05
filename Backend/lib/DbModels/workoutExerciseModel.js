@@ -2,8 +2,8 @@ const { db } = require('../database');
 const WorkoutSetModel = require('./exerciseSetModel');
 
 /**
- * Trēniņu_vingrinājumi (Workout Exercises) model for database operations
- * Izseko vingrinājumus trēniņu plānos
+ * Treniņu_vingrinājumi modelis datubāzes darbībām
+ * Izseko vingrinājumus treniņu plānos
  */
 class WorkoutExerciseModel {
   static tableName = 'workout_exercises';
@@ -32,7 +32,7 @@ class WorkoutExerciseModel {
   }
 
   /**
-   * Pievieno vingrinājumu trēniņam
+   * Pievieno vingrinājumu treniņam
    */
   static async add(workoutId, exerciseId, orderIndex = 0) {
     const sql = `
@@ -77,7 +77,7 @@ class WorkoutExerciseModel {
   }
 
   /**
-   * Atrod vingrinājumus pēc trēniņu ID
+   * Atrod vingrinājumus pēc treniņu ID
    */
   static async findByWorkoutId(workoutId) {
     const exercises = await db.selectAll(`
@@ -113,7 +113,7 @@ class WorkoutExerciseModel {
   }
 
   /**
-   * Dzēš visus vingrinājumus no trēniņam
+   * Dzēš visus vingrinājumus no treniņam
    */
   static async deleteByWorkoutId(workoutId) {
     const sql = `DELETE FROM workout_exercises WHERE workout_id = ?`;

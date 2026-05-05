@@ -1,17 +1,17 @@
 const { db } = require('../database');
 
 /**
- * Sesijas_piegājiens (Session/Set Log) model for database operations
- * Izseko atsevišķas viengabala sērijas, kas pabeigtas trenošanas laikā
+ * Sesijas_piegājiens modelis datubāzes darbībām
+ * Izseko atsevišķas seta sērijas, kas pabeigtas trenošanas laikā
  */
 class ExerciseSetModel {
   static tableName = 'set_logs';
   
   /**
-   * Izveido viengabala sērijas žurnālu tabulu
+   * Izveido seta sērijas žurnālu tabulu
    */
   static async createTable() {
-    // Izveido tabulu viengabalu sēriju sīkstajiem datiem
+    // Izveido tabulu setu detalizētajiem datiem
     const sql = `
       CREATE TABLE IF NOT EXISTS set_logs (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -30,7 +30,7 @@ class ExerciseSetModel {
   }
 
   /**
-   * Pievieno jaunu viengabala sēriju ierakstu
+   * Pievieno jaunu setu ierakstu
    */
   static async add(exerciseLogId, setNumber, reps, weight = null, restDuration = null) {
     const sql = `
@@ -51,7 +51,7 @@ class ExerciseSetModel {
   }
 
   /**
-   * Atrod viengabala sērijas pēc vingrājuma žurnāla ID
+   * Atrod seta sērijas pēc vingrinājuma žurnāla ID
    */
   static async findByExerciseLogId(exerciseLogId) {
     const sql = `
@@ -65,7 +65,7 @@ class ExerciseSetModel {
   }
 
   /**
-   * Atrod setu pec ID
+   * Atrod setu pēc ID
    */
   static async findById(id) {
     const sql = `SELECT * FROM set_logs WHERE id = ?`;
@@ -73,7 +73,7 @@ class ExerciseSetModel {
   }
 
   /**
-   * Atrod nakamo seta numuru vingrinajuma ierakstam
+   * Atrod nākamo seta numuru vingrinājuma ierakstam
    */
   static async getNextSetNumber(exerciseLogId) {
     const sql = `
@@ -87,7 +87,7 @@ class ExerciseSetModel {
   }
 
   /**
-   * Atjaunina viengabala sēriju
+   * Atjaunina setu
    */
   static async update(id, reps, weight, restDuration = null) {
     const sql = `
@@ -105,7 +105,7 @@ class ExerciseSetModel {
   }
 
   /**
-   * Dzēš viengabala sēriju
+   * Dzēš setu
    */
   static async delete(id) {
     const sql = `DELETE FROM set_logs WHERE id = ?`;
@@ -113,7 +113,7 @@ class ExerciseSetModel {
   }
 
   /**
-   * Dzēš visas viengabalu sērijas no vingrājuma
+   * Dzēš visas setu sērijas no vingrinājuma
    */
   static async deleteByExerciseLogId(exerciseLogId) {
     const sql = `DELETE FROM set_logs WHERE exercise_log_id = ?`;

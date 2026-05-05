@@ -22,7 +22,7 @@ router.get('/', authenticateToken, async (req, res) => {
   }
 });
 
-// POST /api/meals/:mealType/foods
+// POST /api/meals/:mealType/foods - ēdienu pievienošana maltītei.
 router.post('/:mealType/foods', authenticateToken, async (req, res) => {
   try {
     const { mealType } = req.params;
@@ -36,10 +36,10 @@ router.post('/:mealType/foods', authenticateToken, async (req, res) => {
       });
     }
 
-    // Get today's date
+    // Tiek iegūts šodienas datums.
     const selectedDate = date || new Date().toISOString().split('T')[0];
 
-    // Find or create meal
+    // Tiek atrasta vai izveidota maltīte.
     let mealId = null;
     const existingMeals = await MealModel.findByUserId(userId, selectedDate);
     const existingMeal = existingMeals.find(m => m.name === mealType);
@@ -47,17 +47,17 @@ router.post('/:mealType/foods', authenticateToken, async (req, res) => {
     if (existingMeal) {
       mealId = existingMeal.id;
     } else {
-      // Create new meal if it doesn't exist
+      // Ja maltīte neeksistē, tiek izveidota jauna maltīte.
       const newMeal = await MealModel.createMeal(userId, mealType, selectedDate);
       mealId = newMeal.id;
     }
 
-    // Add each food to the meal
+    // Katrs izvēlētais ēdiens tiek pievienots maltītei.
     for (const food of foods) {
       await MealModel.addFood(mealId, food.id, food.quantity, 'g');
     }
 
-    // Return updated meal with foods
+    // Tiek atgriezta atjauninātā maltīte ar ēdieniem.
     const updatedMeal = await MealModel.findById(mealId);
 
     res.json({

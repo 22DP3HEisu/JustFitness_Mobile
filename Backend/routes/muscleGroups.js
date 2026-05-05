@@ -5,7 +5,7 @@ const router = express.Router();
 
 /**
  * GET /api/muscle-groups
- * Get all muscle groups
+ * Iegūst visas muskuļu grupas.
  */
 router.get('/', async (req, res) => {
   try {
@@ -27,7 +27,7 @@ router.get('/', async (req, res) => {
 
 /**
  * GET /api/muscle-groups/:id
- * Get a specific muscle group by ID
+ * Iegūst konkrētu muskuļu grupu pēc identifikatora.
  */
 router.get('/:id', async (req, res) => {
   try {
@@ -57,15 +57,15 @@ router.get('/:id', async (req, res) => {
 
 /**
  * POST /api/muscle-groups
- * Create a new muscle group
- * Required fields: name
- * Optional fields: description
+ * Izveido jaunu muskuļu grupu.
+ * Obligātais lauks: name.
+ * Neobligātais lauks: description.
  */
 router.post('/', authenticateToken, async (req, res) => {
   try {
     const { name, description } = req.body;
 
-    // Validate required fields
+    // Tiek pārbaudīti obligātie lauki.
     if (!name || name.trim().length === 0) {
       return res.status(400).json({
         success: false,
@@ -73,7 +73,7 @@ router.post('/', authenticateToken, async (req, res) => {
       });
     }
 
-    // Create muscle group
+    // Tiek izveidota muskuļu grupa.
     const muscleGroup = await MuscleGroupModel.create(
       name.trim(),
       description || null
@@ -87,7 +87,7 @@ router.post('/', authenticateToken, async (req, res) => {
   } catch (error) {
     console.error('Error creating muscle group:', error);
     
-    // Handle duplicate name error
+    // Tiek apstrādāta nosaukuma dublēšanās kļūda.
     if (error.code === 'ER_DUP_ENTRY') {
       return res.status(409).json({
         success: false,

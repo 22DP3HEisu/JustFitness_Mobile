@@ -1,8 +1,8 @@
 const { db } = require('../database');
 
 /**
- * Mājiine (Meal) model for database operations
- * Izseko lietotāja ēdienus un uzņemātus pārtikas produktus
+ * Maltīte modelis datubāzes darbībām
+ * Izseko lietotāja ēdienus un uzņemtos pārtikas produktus
  */
 class MealModel {
     static tableName = 'meals';
@@ -98,7 +98,7 @@ class MealModel {
     }
 
     /**
-     * Atrod visus lietotāja ēdienus tieši tajā dienā, ar uzņemātiem produktiem
+     * Atrod visus lietotāja ēdienus tieši tajā dienā, ar uzņemtajiem produktiem
      */
     static async findByUserId(userId, mealDate = null) {
         const sql = `
@@ -122,7 +122,7 @@ class MealModel {
     }
 
     /**
-     * Iegūst pārtikas produktus konkrētam ēdienum
+     * Iegūst pārtikas produktus konkrētam maltītei
      */
     static async getFoods(mealId) {
         const sql = `

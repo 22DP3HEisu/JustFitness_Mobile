@@ -1,3 +1,5 @@
+// Skats ļauj lietotājam izvēlēties svara, auguma un distances mērvienības.
+// Mērvienību izvēle ietekmē to, kā lietotnē tiek rādīts svars, augums, distance un ar tiem saistītie aprēķini.
 import i18n from "../lib/i18n";
 import { StyleSheet, Text, View, SafeAreaView, TouchableOpacity, Alert, ScrollView, ActivityIndicator } from 'react-native';
 import { StatusBar } from 'expo-status-bar';

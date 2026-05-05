@@ -1,3 +1,5 @@
+// Skats nodrošina jauna ēdiena izveidi ar uzturvērtības datiem uz 100 gramiem.
+// Lietotājs šeit ievada nosaukumu, kalorijas un makroelementus, lai ēdienu vēlāk varētu pievienot maltītēm.
 import i18n from "../lib/i18n";
 import { StyleSheet, Text, View, TextInput, TouchableOpacity, ScrollView, Alert, ActivityIndicator, KeyboardAvoidingView, Platform, Switch } from 'react-native';
 import { StatusBar } from 'expo-status-bar';

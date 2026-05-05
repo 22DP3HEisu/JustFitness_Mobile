@@ -24,7 +24,7 @@ export const AuthProvider = ({
     setLocale(setI18nLocale(nextLocale));
   };
 
-  // Load stored auth data on mount
+  // Komponentes ielādes brīdī tiek nolasīti saglabātie autentifikācijas dati.
   useEffect(() => {
     loadStoredAuth();
   }, []);
@@ -142,7 +142,7 @@ export const AuthProvider = ({
     }
   };
 
-  // Atjaunina lietotāja datus kontekstā un drošā glabātuvē
+  // Lietotāja dati tiek atjaunināti kontekstā un drošajā glabātuvē.
   const updateUser = async userData => {
     try {
       await SecureStore.setItemAsync('user', JSON.stringify(userData));
@@ -164,7 +164,7 @@ export const AuthProvider = ({
     await updateUser(nextUser);
   };
 
-  // Helper function to make authenticated API requests
+  // Palīgfunkcija autentificētu API pieprasījumu veikšanai.
   const authFetch = async (endpoint, options = {}, hasRetried = false) => {
     const accessToken = (await SecureStore.getItemAsync('accessToken')) || token;
     if (!accessToken) {
@@ -181,7 +181,7 @@ export const AuthProvider = ({
     });
     const data = await response.json();
 
-    // Handle token expiration
+    // Tiek apstrādāts piekļuves tokena derīguma termiņa beigu gadījums.
     const isAuthError = response.status === 401 || response.status === 403 && ['Invalid or expired token', 'Invalid token type'].includes(data.message);
     if (isAuthError && !hasRetried) {
       try {

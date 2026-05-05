@@ -1,7 +1,7 @@
 const { db } = require('../database');
 
 /**
- * Sesijas_vingrājumi (Session Exercises) model for database operations
+ * Sesijas_vingrinājumi modelis datubāzes darbībām
  * Izseko vingrinājumus, kas pabeigti konkrētas treniņu sesijas laikā
  */
 class ExerciseLogModel {
@@ -84,7 +84,7 @@ class ExerciseLogModel {
   }
 
   /**
-   * Atrod vingrinajuma ierakstu pec ID
+   * Atrod vingrinājuma ierakstu pēc ID
    */
   static async findById(id) {
     const sql = `
@@ -101,7 +101,7 @@ class ExerciseLogModel {
   }
 
   /**
-   * Atjaunina vingrinajuma piezimes
+   * Atjaunina vingrinājuma piezimes
    */
   static async update(id, notes = null) {
     const sql = `

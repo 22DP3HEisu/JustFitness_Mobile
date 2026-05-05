@@ -4,11 +4,11 @@ const RefreshTokenModel = require('./DbModels/refreshTokenModel');
 const UserModel = require('./DbModels/userModel');
 
 /**
- * Authentication utility functions
+ * Autentifikācijas palīgfunkcijas.
  */
 class AuthService {
   
-  // Generate access token (short-lived)
+  // Tiek ģenerēts īslaicīgs piekļuves tokens.
   static generateAccessToken(userId, email) {
     return jwt.sign(
       { 
@@ -21,7 +21,7 @@ class AuthService {
     );
   }
 
-  // Generate refresh token (long-lived)
+  // Tiek ģenerēts ilgāk derīgs atjaunošanas tokens.
   static generateRefreshToken(userId, email) {
     return jwt.sign(
       { 
@@ -34,7 +34,7 @@ class AuthService {
     );
   }
 
-  // Generate both tokens and store refresh token
+  // Tiek ģenerēti abi tokeni un saglabāts atjaunošanas tokens.
   static async generateTokens(userId, email) {
     const accessToken = this.generateAccessToken(userId, email);
     const refreshToken = this.generateRefreshToken(userId, email);
@@ -44,18 +44,18 @@ class AuthService {
     return { accessToken, refreshToken };
   }
 
-  // Hash password
+  // Tiek šifrēta parole.
   static async hashPassword(password) {
     const saltRounds = 12;
     return await bcrypt.hash(password, saltRounds);
   }
 
-  // Compare password
+  // Tiek salīdzināta ievadītā parole ar šifrēto paroli.
   static async comparePassword(password, hashedPassword) {
     return await bcrypt.compare(password, hashedPassword);
   }
 
-  // Validate user input
+  // Tiek validēti lietotāja ievades dati.
   static validateRegistration(email, password, name) {
     const errors = [];
     
@@ -67,7 +67,7 @@ class AuthService {
       errors.push('Password must be at least 6 characters long');
     }
     
-    // Basic email validation
+    // Tiek veikta e-pasta adreses pamata validācija.
     if (email && !/\S+@\S+\.\S+/.test(email)) {
       errors.push('Invalid email format');
     }
@@ -78,7 +78,7 @@ class AuthService {
     };
   }
 
-  // Validate login input
+  // Tiek validēti pieslēgšanās dati.
   static validateLogin(email, password) {
     const errors = [];
     
@@ -91,13 +91,13 @@ class AuthService {
     };
   }
 
-  // Remove password from user object
+  // No lietotāja objekta tiek izņemta parole.
   static sanitizeUser(user) {
     const { password, ...userWithoutPassword } = user;
     return userWithoutPassword;
   }
 
-  // Verify refresh token
+  // Tiek pārbaudīts atjaunošanas tokens.
   static verifyRefreshToken(refreshToken) {
     return new Promise((resolve, reject) => {
       jwt.verify(refreshToken, process.env.JWT_SECRET, async (err, decoded) => {
@@ -130,23 +130,23 @@ class AuthService {
     return refreshToken;
   }
 
-  // Remove refresh token
+  // Tiek dzēsts atjaunošanas tokens.
   static async removeRefreshToken(refreshToken) {
     const removedCount = await RefreshTokenModel.remove(refreshToken);
     return removedCount > 0;
   }
 
-  // Remove all refresh tokens for a user (logout from all devices)
+  // Tiek dzēsti visi lietotāja atjaunošanas tokeni, lai izrakstītos no visām ierīcēm.
   static async removeAllUserRefreshTokens(userId) {
     return await RefreshTokenModel.removeAllForUser(userId);
   }
 }
 
 /**
- * Middleware functions
+ * Starpslāņa funkcijas.
  */
 
-// Verify JWT access token middleware
+// Starpslānis pārbauda JWT piekļuves tokenu.
 const authenticateToken = (req, res, next) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
@@ -166,7 +166,7 @@ const authenticateToken = (req, res, next) => {
       });
     }
     
-    // Ensure it's an access token
+    // Tiek pārbaudīts, vai tokens ir piekļuves tokens.
     if (decoded.type !== 'access') {
       return res.status(403).json({ 
         success: false, 
@@ -196,7 +196,7 @@ const authenticateToken = (req, res, next) => {
   });
 };
 
-// Optional authentication (doesn't fail if no token)
+// Neobligāta autentifikācija, kas neaptur pieprasījumu, ja tokens nav padots.
 const optionalAuth = (req, res, next) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];

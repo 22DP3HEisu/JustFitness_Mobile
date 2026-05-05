@@ -7,9 +7,9 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { AuthProvider } from './_context/AuthContext';
 import { SelectionProvider } from './_context/SelectionContext';
 
-// Prevent auto-hide before fonts load
+// Automātiskā sākuma ekrāna paslēpšana tiek aizturēta līdz fontu ielādei.
 SplashScreen.preventAutoHideAsync().catch(() => {
-  // Ignore errors if splash screen is not available
+  // Kļūda tiek ignorēta, ja sākuma ekrāns nav pieejams.
 });
 
 export default function RootLayout() {
@@ -20,7 +20,7 @@ export default function RootLayout() {
     useEffect(() => {
         if (loaded) {
             SplashScreen.hideAsync().catch(() => {
-              // Ignore errors if splash screen is not available
+              // Kļūda tiek ignorēta, ja sākuma ekrāns nav pieejams.
             });
         }
     }, [loaded]);

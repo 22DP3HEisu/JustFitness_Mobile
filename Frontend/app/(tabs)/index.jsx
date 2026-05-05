@@ -1,3 +1,5 @@
+// Galvenā paneļa skats attēlo lietotāja dienas kopsavilkumu un progresu.
+// Ekrānā tiek apkopoti uztura, ūdens, soļu, svara un treniņu dati, lai lietotājs ātri redzētu dienas rezultātus.
 import i18n from "../../lib/i18n";
 import React, { useCallback, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View, ScrollView, useWindowDimensions } from 'react-native';

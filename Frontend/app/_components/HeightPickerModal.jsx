@@ -1,3 +1,5 @@
+// Modālais logs nodrošina auguma izvēli centimetros vai pēdās un collās.
+// Tas pielāgo ievadi izvēlētajām mērvienībām un palīdz saglabāt auguma vērtību vienotā formātā.
 import i18n from "../../lib/i18n";
 import { Modal, Pressable, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Picker } from '@react-native-picker/picker';

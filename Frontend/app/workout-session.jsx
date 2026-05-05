@@ -1,3 +1,5 @@
+// Aktīvās treniņa sesijas skats nodrošina vingrinājumu un setu žurnāla aizpildīšanu.
+// Lietotājs treniņa laikā ievada atkārtojumus, svaru un pabeidz sesiju, lai rezultāti tiktu saglabāti vēsturē.
 import i18n from "../lib/i18n";
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Alert, ActivityIndicator, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
 import { StatusBar } from 'expo-status-bar';

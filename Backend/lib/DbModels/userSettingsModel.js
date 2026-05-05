@@ -1,7 +1,7 @@
 const { db } = require('../database');
 
 /**
- * Lietotāja_iestatījumi (User Settings) model for database operations
+ * Lietotāja_iestatījumi modelis datubāzes darbībām
  * Izseko lietotāja personīgos iestatījumus un mērķus
  */
 class UserSettingsModel {

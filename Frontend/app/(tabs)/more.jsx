@@ -13,7 +13,7 @@ const MoreScreen = () => {
   } = useAuth();
   const isAdmin = user?.role === 'admin';
 
-  // Navigācijai uz rediģēšanas ekrāniem
+  // Tiek nodrošināta navigācija uz rediģēšanas ekrāniem.
   const handleNavigate = screen => {
     router.push(screen);
   };
@@ -55,7 +55,7 @@ const MoreScreen = () => {
       <LinearGradient colors={['rgba(58, 78, 72, 0.4)', 'rgba(58, 78, 72, 0.8)', 'rgba(58, 78, 72, 0.95)']} style={styles.overlay}>
         
         <ScrollView style={styles.scrollContainer} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-          {/* Konts sekcija */}
+          {/* Konta sadaļa */}
           <MenuSection title={i18n.t("ui.account")} items={[{
           label: i18n.t("ui.account"),
           subtitle: i18n.t("ui.redigejiet_kontu_informaciju"),
@@ -68,7 +68,7 @@ const MoreScreen = () => {
           route: '/edit-password'
         }]} />
 
-          {/* Profila sekcija */}
+          {/* Profila sadaļa */}
           <MenuSection title={i18n.t("ui.profile")} items={[{
           label: i18n.t("ui.profile"),
           subtitle: i18n.t("ui.dzimsanas_diena_dzimums_augums"),

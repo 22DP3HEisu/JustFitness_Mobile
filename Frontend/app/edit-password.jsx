@@ -7,7 +7,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { useAuth } from './_context/AuthContext';
 import { useState } from 'react';
 
-// Paroles ievades komponente
+// Paroles ievades komponente.
 const PasswordInput = ({
   label,
   value,
@@ -38,7 +38,7 @@ const EditPasswordScreen = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isChanging, setIsChanging] = useState(false);
   const handleChangePassword = async () => {
-    // Validēē formu
+    // Tiek validēta forma.
     if (!oldPassword.trim()) {
       Alert.alert(i18n.t("ui.kluda"), i18n.t("ui.ludzu_ievadiet_veco_paroli"));
       return;
@@ -89,7 +89,7 @@ const EditPasswordScreen = () => {
   return <SafeAreaView style={styles.container}>
       <StatusBar style="light" />
       <LinearGradient colors={['rgba(58, 78, 72, 0.4)', 'rgba(58, 78, 72, 0.8)', 'rgba(58, 78, 72, 0.95)']} style={styles.overlay}>
-        {/* Virsraksts */}
+        {/* Virsraksta zona */}
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()}>
             <MaterialIcons name="arrow-back" size={28} color="#FFFFFF" />
@@ -103,18 +103,18 @@ const EditPasswordScreen = () => {
         <ScrollView style={styles.scrollContainer} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
           <Text style={styles.description}>{i18n.t("ui.ievadiet_savu_vecumu_paroli_un_izvelieties_jaunu_paroli")}</Text>
 
-          {/* Vecā parole */}
+          {/* Vecās paroles ievades lauks */}
           <PasswordInput label={i18n.t("ui.veca_parole")} value={oldPassword} onChangeText={setOldPassword} showPassword={showOldPassword} onToggleShow={() => setShowOldPassword(!showOldPassword)} icon="lock" />
 
           <View style={styles.divider} />
 
-          {/* Jaunā parole */}
+          {/* Jaunās paroles ievades lauks */}
           <PasswordInput label={i18n.t("ui.jauna_parole")} value={newPassword} onChangeText={setNewPassword} showPassword={showNewPassword} onToggleShow={() => setShowNewPassword(!showNewPassword)} icon="lock-outline" />
 
-          {/* Apstipriniet jauno paroli */}
+          {/* Jaunās paroles apstiprināšanas lauks */}
           <PasswordInput label={i18n.t("ui.apstipriniet_jauno_paroli")} value={confirmPassword} onChangeText={setConfirmPassword} showPassword={showConfirmPassword} onToggleShow={() => setShowConfirmPassword(!showConfirmPassword)} icon="lock-outline" />
 
-          {/* Paroles prasības */}
+          {/* Paroles prasību sadaļa */}
           <View style={styles.requirementsBox}>
             <Text style={styles.requirementsTitle}>{i18n.t("ui.paroles_prasibas")}</Text>
             <Text style={[styles.requirement, newPassword.length >= 8 && styles.requirementMet]}>
@@ -130,7 +130,7 @@ const EditPasswordScreen = () => {
           </View>
         </ScrollView>
 
-        {/* Mainīt paroli pogu */}
+        {/* Paroles maiņas poga */}
         <View style={styles.footer}>
           <TouchableOpacity style={[styles.changeButton, isChanging && styles.disabledButton]} onPress={handleChangePassword} disabled={isChanging}>
             {isChanging ? <ActivityIndicator color="#2C3E50" /> : <>

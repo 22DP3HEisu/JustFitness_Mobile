@@ -1,3 +1,5 @@
+// Modulis inicializē lietotnes tulkojumus un izvēlas atbalstīto noklusējuma valodu.
+// Tas apkopo angļu un latviešu tekstus, lai saskarni varētu pārslēgt atbilstoši lietotāja iestatījumiem.
 import { I18n } from "i18n-js"
 
 export const supportedLocales = ["en", "lv"]

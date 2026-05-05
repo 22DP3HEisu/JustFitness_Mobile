@@ -1,3 +1,5 @@
+// Ēdiena detaļu skats attēlo uzturvērtību un rediģēšanas iespējas.
+// Šajā ekrānā lietotājs var apskatīt kalorijas, makroelementus un rediģēt vai dzēst paša izveidotu ēdienu.
 import i18n from "../lib/i18n";
 import { StyleSheet, Text, View, TextInput, TouchableOpacity, ScrollView, Alert, ActivityIndicator, KeyboardAvoidingView, Platform, Switch } from 'react-native';
 import { StatusBar } from 'expo-status-bar';

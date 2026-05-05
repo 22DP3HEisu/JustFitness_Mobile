@@ -1,3 +1,5 @@
+// Maršruti nodrošina administratora darbības ar lietotājiem un viņu izveidoto saturu.
+// Šajā failā tiek apstrādāta lietotāju saraksta iegūšana, detalizēta apskate, rediģēšana un bloķēšana.
 const express = require('express');
 const { AuthService, authenticateToken, requireAdmin } = require('../lib/auth');
 const UserModel = require('../lib/DbModels/userModel');

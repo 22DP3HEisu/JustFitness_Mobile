@@ -2,17 +2,17 @@ const { db } = require('../database');
 const WorkoutExerciseModel = require('./workoutExerciseModel');
 
 /**
- * Trēnini (Workout) model for database operations
- * Izseko lietotāja trēniņu plānus un vingrinājumus
+ * Treniņš modelis datubāzes darbībām
+ * Izseko lietotāja treniņu plānus un vingrinājumus
  */
 class WorkoutModel {
   static tableName = 'workouts';
 
   /**
-   * Izveido trēniņu tabulu
+   * Izveido treniņu tabulu
    */
   static async createTable() {
-    // Izveido tabulu trēniņu plānus ar vingrinājumiem
+    // Izveido tabulu treniņu plānus ar vingrinājumiem
     const sql = `
       CREATE TABLE IF NOT EXISTS workouts (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -31,7 +31,7 @@ class WorkoutModel {
   }
 
   /**
-   * Izveido jaunu trēniņu
+   * Izveido jaunu treniņu
    */
   static async create(userId, name, description = null) {
     const sql = `
@@ -44,7 +44,7 @@ class WorkoutModel {
   }
 
   /**
-   * Atjaunina trēniņu
+   * Atjaunina treniņu
    */
   static async update(id, name, description) {
     const sql = `
@@ -58,7 +58,7 @@ class WorkoutModel {
   }
 
   /**
-   * Atrod trēniņu pēc ID ar tā vingrinājumiem
+   * Atrod treniņu pēc ID ar tā vingrinājumiem
    */
   static async findById(id) {
     const sql = `SELECT * FROM workouts WHERE id = ?`;
@@ -66,14 +66,14 @@ class WorkoutModel {
 
     if (!workout) return null;
 
-    // Pievieno vingrinājumus trēniņam
+    // Pievieno vingrinājumus treniņam
     workout.exercises = await WorkoutExerciseModel.findByWorkoutId(id);
 
     return workout;
   }
 
   /**
-   * Atrod lietotāja trēniņus
+   * Atrod lietotāja treniņus
    */
   static async findByUserId(userId, limit = 50, offset = 0) {
     const sql = `
@@ -100,7 +100,7 @@ class WorkoutModel {
   }
 
   /**
-   * Dzēš trēniņu
+   * Dzēš treniņu
    */
   static async delete(id) {
     const sql = `DELETE FROM workouts WHERE id = ?`;

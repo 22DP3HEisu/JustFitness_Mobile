@@ -1,8 +1,8 @@
 const mysql = require('mysql2/promise');
 
 /**
- * Database Service for MySQL Database operations
- * Handles connection management, queries, and transactions
+ * MySQL datubāzes darbību serviss.
+ * Nodrošina savienojumu pārvaldību, vaicājumu izpildi un transakcijas.
  */
 class DatabaseService {
   constructor() {
@@ -11,7 +11,7 @@ class DatabaseService {
   }
 
   /**
-   * Initialize connection pool
+   * Inicializē datubāzes savienojumu pūlu.
    */
   async initializePool() {
     if (this.isPoolInitialized) {
@@ -32,7 +32,7 @@ class DatabaseService {
         charset: 'utf8mb4'
       };
 
-      // Only add SSL if explicitly enabled
+      // SSL konfigurācija tiek pievienota tikai tad, ja tā ir skaidri ieslēgta.
       if (process.env.DB_SSL === 'true') {
         poolConfig.ssl = {
           rejectUnauthorized: false
@@ -54,7 +54,7 @@ class DatabaseService {
   }
 
   /**
-   * Execute a query with parameters
+   * Izpilda vaicājumu ar parametriem.
    */
   async executeQuery(sql, params = []) {
     if (!this.isPoolInitialized) {
@@ -79,7 +79,7 @@ class DatabaseService {
   }
 
   /**
-   * Test database connection
+   * Pārbauda datubāzes savienojumu.
    */
   async testConnection() {
     try {
@@ -93,7 +93,7 @@ class DatabaseService {
   }
 
   /**
-   * Get first row from query
+   * Iegūst pirmo vaicājuma rezultāta rindu.
    */
   async selectOne(sql, params = []) {
     const result = await this.executeQuery(sql, params);
@@ -101,7 +101,7 @@ class DatabaseService {
   }
 
   /**
-   * Get all rows from query
+   * Iegūst visas vaicājuma rezultāta rindas.
    */
   async selectAll(sql, params = []) {
     const result = await this.executeQuery(sql, params);
@@ -109,7 +109,7 @@ class DatabaseService {
   }
 
   /**
-   * Insert data and return insertId
+   * Ievieto datus un atgriež ievietotā ieraksta identifikatoru.
    */
   async insert(sql, params = []) {
     const result = await this.executeQuery(sql, params);
@@ -120,7 +120,7 @@ class DatabaseService {
   }
 
   /**
-   * Update/Delete and return affected rows count
+   * Atjaunina vai dzēš datus un atgriež ietekmēto rindu skaitu.
    */
   async update(sql, params = []) {
     const result = await this.executeQuery(sql, params);
@@ -128,7 +128,7 @@ class DatabaseService {
   }
 
   /**
-   * Execute transaction with multiple queries
+   * Izpilda transakciju ar vairākiem vaicājumiem.
    */
   async transaction(queries) {
     if (!this.isPoolInitialized) {
@@ -166,7 +166,7 @@ class DatabaseService {
   }
 }
 
-// Create singleton instance
+// Tiek izveidota viena koplietojama servisa instance.
 const dbService = new DatabaseService();
 
 module.exports = {

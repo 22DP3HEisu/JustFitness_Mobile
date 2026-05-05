@@ -1,7 +1,7 @@
 const { db } = require('../database');
 
 /**
- * Ādiens (Food) model for database operations
+ * Ēdiens modelis datubāzes darbībām
  * Izseko pārtikas produktus un to uztura vērtības
  */
 class FoodModel {
@@ -45,7 +45,7 @@ class FoodModel {
    * Izveido jaunu pārtikas produktu
    */
   static async createFood(userId, name, caloriesPer100g, proteinPer100g, carbsPer100g, fatPer100g, isPublic = false) {
-    // Tiek saglābats produkts ar uztura informāciju uz 100g
+    // Tiek saglabāts produkts ar uztura informāciju uz 100g
     const sql = `
       INSERT INTO foods (user_id, name, calories_per_100g, protein_per_100g, carbs_per_100g, fat_per_100g, is_public)
       VALUES (?, ?, ?, ?, ?, ?, ?)`;

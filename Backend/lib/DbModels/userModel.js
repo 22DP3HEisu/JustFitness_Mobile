@@ -2,7 +2,7 @@ const { db } = require('../database');
 
 /**
  * Lietotāja modelis datubāzes operācijām
- * MySQL implementācija
+ * MySQL īstenojums
  */
 class UserModel {
   static tableName = 'users';

@@ -26,14 +26,7 @@ const toCentimeters = (height, unit = 'cm') => {
   return unit === 'in' ? value * 2.54 : value;
 };
 
-router.get('/test', (req, res) => {
-  res.json({
-    success: true,
-    message: 'Auth routes are working!',
-  });
-});
-
-// Register route
+// Reģistrācijas maršruts.
 router.post('/register', async (req, res) => {
   try {
     const { 
@@ -55,7 +48,7 @@ router.post('/register', async (req, res) => {
       language
     } = req.body;
 
-    // Validate input
+    // Tiek validēti ievades dati.
     const validation = AuthService.validateRegistration(email, password, name);
     if (!validation.isValid) {
       return res.status(400).json({
@@ -65,7 +58,7 @@ router.post('/register', async (req, res) => {
       });
     }
 
-    // Check if user already exists
+    // Tiek pārbaudīts, vai lietotājs jau eksistē.
     const existingUser = await UserModel.findByEmail(email);
     if (existingUser) {
       return res.status(409).json({
@@ -74,7 +67,7 @@ router.post('/register', async (req, res) => {
       });
     }
 
-    // Hash password
+    // Tiek šifrēta parole.
     const hashedPassword = await AuthService.hashPassword(password);
 
     // Izveido jaunu lietotāju datubāzē
@@ -123,10 +116,10 @@ router.post('/register', async (req, res) => {
     // Iegūst izveidotos iestatījumus
     const userSettings = await UserSettingsModel.findByUserId(newUser.id);
 
-    // Generate tokens
+    // Tiek ģenerēti autentifikācijas tokeni.
     const { accessToken, refreshToken } = await AuthService.generateTokens(newUser.id, newUser.email);
 
-    // Return user data (without password)
+    // Tiek atgriezti lietotāja dati bez paroles.
     const userWithoutPassword = AuthService.sanitizeUser(newUser);
     userWithoutPassword.settings = userSettings;
 
@@ -151,12 +144,12 @@ router.post('/register', async (req, res) => {
   }
 });
 
-// Login route
+// Pieslēgšanās maršruts.
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Validate input
+    // Tiek validēti ievades dati.
     const validation = AuthService.validateLogin(email, password);
     if (!validation.isValid) {
       return res.status(400).json({
@@ -166,7 +159,7 @@ router.post('/login', async (req, res) => {
       });
     }
 
-    // Find user in database
+    // Lietotājs tiek sameklēts datubāzē.
     const user = await UserModel.findByEmail(email);
     if (!user) {
       return res.status(401).json({
@@ -175,7 +168,7 @@ router.post('/login', async (req, res) => {
       });
     }
 
-    // Verify password
+    // Tiek pārbaudīta parole.
     const isValidPassword = await AuthService.comparePassword(password, user.password);
     if (!isValidPassword) {
       return res.status(401).json({
@@ -184,13 +177,13 @@ router.post('/login', async (req, res) => {
       });
     }
 
-    // Update last login in database
+    // Datubāzē tiek atjaunināts pēdējās pieslēgšanās laiks.
     await UserModel.updateLastLogin(user.id);
 
-    // Generate tokens
+    // Tiek ģenerēti autentifikācijas tokeni.
     const { accessToken, refreshToken } = await AuthService.generateTokens(user.id, user.email);
 
-    // Return user data (without password)
+    // Tiek atgriezti lietotāja dati bez paroles.
     const userWithoutPassword = AuthService.sanitizeUser(user);
     userWithoutPassword.settings = await UserSettingsModel.findByUserId(user.id);
 
@@ -215,7 +208,7 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// Refresh token route (doesn't require access token)
+// Tokena atjaunošanas maršruts, kuram nav nepieciešams piekļuves tokens.
 router.post('/refresh', async (req, res) => {
   try {
     const { refreshToken } = req.body;
@@ -227,10 +220,10 @@ router.post('/refresh', async (req, res) => {
       });
     }
 
-    // Verify refresh token
+    // Tiek pārbaudīts atjaunošanas tokens.
     const decoded = await AuthService.verifyRefreshToken(refreshToken);
 
-    // Find user in database
+    // Lietotājs tiek sameklēts datubāzē.
     const user = await UserModel.findById(decoded.userId);
     if (!user) {
       return res.status(404).json({
@@ -239,7 +232,7 @@ router.post('/refresh', async (req, res) => {
       });
     }
 
-    // Rotate refresh token so the session can continue safely.
+    // Atjaunošanas tokens tiek nomainīts, lai sesija varētu turpināties droši.
     const newRefreshToken = await AuthService.rotateRefreshToken(refreshToken, user.id, user.email);
     const newAccessToken = AuthService.generateAccessToken(user.id, user.email);
 
@@ -267,12 +260,12 @@ router.post('/refresh', async (req, res) => {
   }
 });
 
-// Logout route - removes the refresh token for this device.
+// Izrakstīšanās maršruts dzēš konkrētās ierīces atjaunošanas tokenu.
 router.post('/logout', async (req, res) => {
   try {
     const { refreshToken } = req.body;
 
-    // Remove refresh token if provided
+    // Tiek dzēsts atjaunošanas tokens. if provided
     if (refreshToken) {
       const removed = await AuthService.removeRefreshToken(refreshToken);
       if (removed) {
@@ -294,10 +287,10 @@ router.post('/logout', async (req, res) => {
   }
 });
 
-// Logout from all devices
+// Izrakstīšanās no visām ierīcēm.
 router.post('/logout-all', authenticateToken, async (req, res) => {
   try {
-    // Remove all refresh tokens for this user
+    // Tiek dzēsti visi šī lietotāja atjaunošanas tokeni.
     const removedCount = await AuthService.removeAllUserRefreshTokens(req.user.userId);
 
     res.json({
@@ -312,15 +305,6 @@ router.post('/logout-all', authenticateToken, async (req, res) => {
       message: 'Internal server error during logout'
     });
   }
-});
-
-// Test route to check if auth routes are working
-router.get('/test', (req, res) => {
-  res.json({
-    success: true,
-    message: 'Auth routes are working!',
-    timestamp: new Date().toISOString()
-  });
 });
 
 module.exports = router;

@@ -35,7 +35,7 @@ const RegisterScreen = () => {
   const handleSignUp = async () => {
     if (!validateForm()) return;
 
-    // Navigate to profile setup page with user data
+    // Lietotājs tiek novirzīts uz profila izveides lapu kopā ar ievadītajiem datiem.
     router.push({
       pathname: '/setup-profile',
       params: {
