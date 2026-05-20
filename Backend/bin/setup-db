@@ -19,8 +19,8 @@ const Models = {
   WorkoutLogModel: require('../lib/DbModels/workoutLogModel'),
   ExerciseLogModel: require('../lib/DbModels/exerciseLogModel'),
   SetLogModel: require('../lib/DbModels/SetLogModel'),
-  MealModel: require('../lib/DbModels/mealModel'),
   FoodModel: require('../lib/DbModels/foodModel'),
+  MealModel: require('../lib/DbModels/mealModel'),
   WaterLogModel: require('../lib/DbModels/waterLogModel')
 };
 
