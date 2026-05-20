@@ -1,8 +1,9 @@
 import React, { createContext, useState, useContext, useEffect, useRef } from 'react';
 import * as SecureStore from 'expo-secure-store';
 import i18n, { setI18nLocale } from '../../lib/i18n';
-const API_URL = 'http://192.168.1.100:3000';
+const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://192.168.1.100:3000';
 const AuthContext = createContext(null);
+
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
@@ -10,6 +11,7 @@ export const useAuth = () => {
   }
   return context;
 };
+
 export const AuthProvider = ({
   children
 }) => {

@@ -76,7 +76,8 @@ const SetupProfileScreen = () => {
   const router = useRouter();
   const params = useLocalSearchParams();
   const {
-    login
+    login,
+    API_URL
   } = useAuth();
 
   // Lietotāja dati no reģistrācijas formas.
@@ -177,7 +178,7 @@ const SetupProfileScreen = () => {
     if (!validateForm()) return;
     setIsLoading(true);
     try {
-      const response = await fetch('http://192.168.1.100:3000/auth/register', {
+      const response = await fetch(`${API_URL}/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

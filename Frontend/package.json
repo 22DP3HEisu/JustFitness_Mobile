@@ -4,10 +4,11 @@
   "main": "expo-router/entry",
   "scripts": {
     "start": "expo start",
+    "start-global": "expo start --tunnel",
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "setup": "npm install"
+    "setup": "node -e \"const fs=require('fs'); if (!fs.existsSync('.env')) fs.copyFileSync('.env.example', '.env');\" && npm install"
   },
   "dependencies": {
     "@expo-google-fonts/russo-one": "^0.4.1",
