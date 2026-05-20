@@ -7,7 +7,7 @@
     "dev": "nodemon ./bin/www",
     "create-env": "node ./bin/create-env",
     "check-env": "node -e \"require('dotenv').config(); console.log('Environment loaded successfully!')\"",
-    "setup": "node -e \"const fs=require('fs'); if (!fs.existsSync('.env')) fs.copyFileSync('.env.example', '.env');\" && npm install && npm run setup-db",
+    "setup": "node -e \"const fs=require('fs'); if (!fs.existsSync('.env')) fs.copyFileSync('.env.example', '.env');\" && npm install",
     "setup-db": "node ./bin/setup-db",
     "db-reset": "node ./bin/reset-db",
     "db-health": "node -e \"require('dotenv').config(); const {db} = require('./lib/database'); db.healthCheck().then(h => console.log(JSON.stringify(h, null, 2))).then(() => db.closePool())\""
