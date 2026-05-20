@@ -1,5 +1,5 @@
 // Vispirms tiek ielādēti vides mainīgie.
-require('dotenv').config();
+require('dotenv').config({ path: require('path').join(__dirname, '.env') });
 
 var express = require('express');
 var path = require('path');
