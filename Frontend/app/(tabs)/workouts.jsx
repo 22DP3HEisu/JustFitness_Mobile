@@ -101,7 +101,7 @@ const WorkoutCard = ({
           </View>
           <View style={styles.workoutInfo}>
             <Text selectable style={styles.workoutName}>{item.name}</Text>
-            <Text style={styles.workoutMeta}>{i18n.t("ui.created")}{formatDate(item.created_at)}</Text>
+            <Text style={styles.workoutMeta}>{i18n.t("ui.created")} {formatDate(item.created_at)}</Text>
           </View>
           <TouchableOpacity style={styles.iconButton} onPress={event => handleEdit(event, close)}>
             <Ionicons name="create-outline" size={21} color="#FFFFFF" />
@@ -114,11 +114,11 @@ const WorkoutCard = ({
           <View style={styles.workoutPills}>
             <View style={styles.pill}>
               <Ionicons name="fitness-outline" size={14} color="#F5C842" />
-              <Text style={styles.pillText}>{exerciseCount}{i18n.t("ui.exercises_2")}</Text>
+              <Text style={styles.pillText}>{exerciseCount} {i18n.t("ui.exercises_2")}</Text>
             </View>
             <View style={styles.pill}>
               <Ionicons name="repeat-outline" size={14} color="#F5C842" />
-              <Text style={styles.pillText}>{setCount}{i18n.t("ui.sets")}</Text>
+              <Text style={styles.pillText}>{setCount} {i18n.t("ui.sets")}</Text>
             </View>
           </View>
 
@@ -310,7 +310,7 @@ const WorkoutsScreen = () => {
           </View>
           <View style={styles.activeInfo}>
             <Text selectable style={styles.activeTitle}>{workout.name || i18n.t("ui.workout")}</Text>
-            <Text style={styles.activeMeta}>{sessionExercises.length}{i18n.t("ui.exercises_3")}{setCount}{i18n.t("ui.sets")}</Text>
+            <Text style={styles.activeMeta}>{sessionExercises.length} {i18n.t("ui.exercises_2")} - {setCount} {i18n.t("ui.sets")}</Text>
           </View>
           <Ionicons name="expand-outline" size={22} color="#F5C842" />
         </View>

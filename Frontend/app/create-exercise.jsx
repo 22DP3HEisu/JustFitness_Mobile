@@ -157,7 +157,7 @@ const CreateExerciseScreen = () => {
               <TouchableOpacity style={styles.selectorField} onPress={openSecondarySelection}>
                 <MaterialCommunityIcons name="arm-flex-outline" size={20} color="#F5C842" />
                 {secondaryMuscleGroups.length > 0 ? <Text style={styles.selectorText}>
-                    {secondaryMuscleGroups.length}{i18n.t("ui.selected")}</Text> : <Text style={styles.selectorPlaceholder}>{i18n.t("ui.tap_to_select_secondary_muscle_groups")}</Text>}
+                    {secondaryMuscleGroups.length} {i18n.t("ui.selected")}</Text> : <Text style={styles.selectorPlaceholder}>{i18n.t("ui.tap_to_select_secondary_muscle_groups")}</Text>}
                 <Ionicons name="chevron-forward" size={20} color="rgba(255, 255, 255, 0.5)" />
               </TouchableOpacity>
               

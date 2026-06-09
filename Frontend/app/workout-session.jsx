@@ -391,7 +391,7 @@ const WorkoutSessionScreen = () => {
         </View>
         <View style={styles.exerciseInfo}>
           <Text selectable style={styles.exerciseName}>{exerciseLog.exercise_name}</Text>
-          <Text style={styles.exerciseMeta}>{exerciseLog.sets?.length || 0}{i18n.t("ui.sets")}</Text>
+          <Text style={styles.exerciseMeta}>{exerciseLog.sets?.length || 0} {i18n.t("ui.sets")}</Text>
         </View>
         <TouchableOpacity onPress={() => removeExercise(exerciseLog)} style={styles.exerciseActionButton} disabled={isMutating}>
           <Ionicons name="trash-outline" size={20} color="#FF6B6B" />

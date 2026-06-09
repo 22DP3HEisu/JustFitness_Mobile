@@ -42,9 +42,10 @@ const getChartDateLabels = entries => {
 const formatSet = set => {
   const reps = Number(set.reps || 0);
   const weight = set.weight === null || set.weight === undefined || set.weight === '' ? null : Number(set.weight);
-  if (!weight) return `${reps} reps`;
+  const repsLabel = i18n.t("ui.reps").toLowerCase();
+  if (!weight) return `${reps} ${repsLabel}`;
   const formattedWeight = Number.isInteger(weight) ? String(weight) : weight.toFixed(1);
-  return `${reps} reps x ${formattedWeight} kg`;
+  return `${reps} ${repsLabel} × ${formattedWeight} kg`;
 };
 const VolumeLineChart = ({
   width,
@@ -221,13 +222,13 @@ const WorkoutDetailsScreen = () => {
         </View>
         <View style={styles.exerciseInfo}>
           <Text selectable style={styles.exerciseName}>{exercise.exercise_name || exercise.name || i18n.t("ui.exercise")}</Text>
-          <Text style={styles.exerciseMeta}>{exercise.sets?.length || 0}{i18n.t("ui.sets")}</Text>
+          <Text style={styles.exerciseMeta}>{exercise.sets?.length || 0} {i18n.t("ui.sets")}</Text>
         </View>
       </View>
 
       <View style={styles.setList}>
         {(exercise.sets || []).map((set, setIndex) => <View key={set.id || setIndex} style={styles.setRow}>
-            <Text style={styles.setNumber}>{i18n.t("ui.set")}{setIndex + 1}</Text>
+            <Text style={styles.setNumber}>{i18n.t("ui.set")} {setIndex + 1}</Text>
             <Text style={styles.setValue}>{formatSet(set)}</Text>
           </View>)}
       </View>

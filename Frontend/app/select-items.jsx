@@ -284,7 +284,7 @@ const SelectItemsScreen = () => {
             
             {/* Aprēķinātās kalorijas tiek rādītas, ja tās ir pieejamas */}
             {item.calories_per_100g && <Text style={styles.calculatedCalories}>
-                ≈ {Math.round(item.calories_per_100g * quantity / 100)}{i18n.t("ui.kcal")}</Text>}
+                ≈ {Math.round(item.calories_per_100g * quantity / 100)} {i18n.t("ui.kcal")}</Text>}
           </View>}
       </View>;
   };

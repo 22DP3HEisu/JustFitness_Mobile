@@ -72,7 +72,7 @@ const FoodSwipeRow = ({
           <Text style={styles.foodName}>{item.name}</Text>
           {item.detail ? <Text style={styles.foodDetail}>{item.detail}</Text> : null}
         </View>
-        <Text style={styles.foodCalories}>{item.calories || item.calories_per_100g * (item.quantity / 100)}{i18n.t("ui.kcal")}</Text>
+        <Text style={styles.foodCalories}>{item.calories || item.calories_per_100g * (item.quantity / 100)} {i18n.t("ui.kcal")}</Text>
       </TouchableOpacity>}
     </SwipeToDelete>;
 };
@@ -333,12 +333,12 @@ const NutritionScreen = () => {
             <View style={styles.card}>
               <View style={styles.waterHeader}>
                 <Text style={styles.cardLabel}>{i18n.t("ui.water")}</Text>
-                <Text style={styles.waterAmountInline}>{waterMl}{i18n.t("ui.ml")}</Text>
+                <Text style={styles.waterAmountInline}>{waterMl} {i18n.t("ui.ml")}</Text>
               </View>
               <View style={styles.waterScaleRow}>
                 <Text style={styles.waterScaleText}>0</Text>
-                <Text style={styles.waterScaleText}>{(WATER_GOAL_ML / 2 / 1000).toFixed(1)}{i18n.t("ui.l")}</Text>
-                <Text style={styles.waterScaleText}>{(WATER_GOAL_ML / 1000).toFixed(1)}{i18n.t("ui.l")}</Text>
+                <Text style={styles.waterScaleText}>{(WATER_GOAL_ML / 2 / 1000).toFixed(1)} {i18n.t("ui.l")}</Text>
+                <Text style={styles.waterScaleText}>{(WATER_GOAL_ML / 1000).toFixed(1)} {i18n.t("ui.l")}</Text>
               </View>
               <View style={styles.waterBarBg}>
                 <View style={[styles.waterBarFill, {
@@ -346,11 +346,11 @@ const NutritionScreen = () => {
             }]} />
               </View>
               <Text style={styles.waterAmount}>
-                {(waterMl / 1000).toFixed(2)}{i18n.t("ui.l_2")}{WATER_GOAL_ML / 1000}{i18n.t("ui.l")}</Text>
+                {(waterMl / 1000).toFixed(2)} {i18n.t("ui.l_2")} {WATER_GOAL_ML / 1000} {i18n.t("ui.l")}</Text>
               <View style={styles.waterQuickRow}>
                 {WATER_QUICK_AMOUNTS.map(amount => <TouchableOpacity key={amount} onPress={() => handleAddWater(amount)} style={styles.addWaterBtn}>
                     <Ionicons name="add" size={16} color="#F5C842" />
-                    <Text style={styles.addWaterText}>{amount}{i18n.t("ui.ml")}</Text>
+                    <Text style={styles.addWaterText}>{amount} {i18n.t("ui.ml")}</Text>
                   </TouchableOpacity>)}
               </View>
               <View style={styles.customWaterRow}>
@@ -363,7 +363,7 @@ const NutritionScreen = () => {
                   {waterEntries.slice(0, 5).map(entry => <View key={entry.id} style={styles.waterEntryRow}>
                       <View style={styles.waterEntryInfo}>
                         <Ionicons name="water" size={16} color="#5B8CDB" />
-                        <Text selectable style={styles.waterEntryText}>{entry.amount_ml}{i18n.t("ui.ml")}</Text>
+                        <Text selectable style={styles.waterEntryText}>{entry.amount_ml} {i18n.t("ui.ml")}</Text>
                       </View>
                       <TouchableOpacity onPress={() => handleDeleteWater(entry.id)} hitSlop={{
                 top: 8,
@@ -415,7 +415,7 @@ const NutritionScreen = () => {
                       <MaterialCommunityIcons name={meal.icon} size={18} color="#F5C842" />
                       <Text style={styles.mealTitle}>{i18n.t(meal.labelKey)}</Text>
                     </View>
-                    <Text style={styles.mealCalories}>{mealCals}{i18n.t("ui.kcal")}</Text>
+                    <Text style={styles.mealCalories}>{mealCals} {i18n.t("ui.kcal")}</Text>
                   </View>
 
                   {(meal.items ?? []).length === 0 ? <View style={styles.emptyMeal}>

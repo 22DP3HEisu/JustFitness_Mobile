@@ -494,7 +494,7 @@ const DashboardScreen = () => {
                 <Text style={styles.statName}>{i18n.t("ui.steps")}</Text>
                 <Text style={styles.todayText}>{i18n.t("ui.today")}</Text>
                 <View style={styles.stepGoalRow}>
-                  <Text style={styles.stepGoal}>{i18n.t("ui.goal")}{Math.round(stepGoal).toLocaleString('en-US').replace(',', ' ')}{i18n.t("ui.steps_2")}</Text>
+                  <Text style={styles.stepGoal}>{i18n.t("ui.goal")} {Math.round(stepGoal).toLocaleString('en-US').replace(',', ' ')} {i18n.t("ui.steps_2")}</Text>
                 </View>
                 <View style={styles.progressTrack}>
                   <View style={[styles.progressFill, {

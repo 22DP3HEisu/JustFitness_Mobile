@@ -121,7 +121,7 @@ const EditWeightScreen = () => {
 
           <View style={styles.infoBox}>
             <MaterialIcons name="history" size={18} color="#F5C842" />
-            <Text style={styles.infoText}>{i18n.t("ui.pedejais_ieraksts")}{formatUpdatedAt(updatedAt)}</Text>
+            <Text style={styles.infoText}>{i18n.t("ui.pedejais_ieraksts")} {formatUpdatedAt(updatedAt)}</Text>
           </View>
         </ScrollView>
 

@@ -118,10 +118,10 @@ const EditPasswordScreen = () => {
           <View style={styles.requirementsBox}>
             <Text style={styles.requirementsTitle}>{i18n.t("ui.paroles_prasibas")}</Text>
             <Text style={[styles.requirement, newPassword.length >= 8 && styles.requirementMet]}>
-              {newPassword.length >= 8 ? '✓' : '○'}{i18n.t("ui.vismaz_8_rakstzimes")}{newPassword.length})
+              {`${newPassword.length >= 8 ? '✓' : '○'} ${i18n.t("ui.vismaz_8_rakstzimes")}${newPassword.length})`}
             </Text>
             <Text style={[styles.requirement, newPassword === confirmPassword && newPassword.length > 0 && styles.requirementMet]}>
-              {newPassword === confirmPassword && newPassword.length > 0 ? '✓' : '○'}{i18n.t("ui.paroles_sakrit")}</Text>
+              {newPassword === confirmPassword && newPassword.length > 0 ? '✓' : '○'} {i18n.t("ui.paroles_sakrit")}</Text>
           </View>
 
           <View style={styles.infoBox}>

@@ -230,11 +230,11 @@ const AdminUserDetailsScreen = () => {
       </View>
 
       <View style={styles.metaCard}>
-        <Text selectable style={[styles.metaText, !isSelectedUserActive && styles.inactiveMetaText]}>{i18n.t("ui.status")}{isSelectedUserActive ? i18n.t("ui.active") : i18n.t("ui.inactive")}
+        <Text selectable style={[styles.metaText, !isSelectedUserActive && styles.inactiveMetaText]}>{i18n.t("ui.status")} {isSelectedUserActive ? i18n.t("ui.active") : i18n.t("ui.inactive")}
         </Text>
-        <Text selectable style={styles.metaText}>{i18n.t("ui.created_2")}{selectedUser?.created_at ? new Date(selectedUser.created_at).toLocaleDateString() : '--'}</Text>
-        <Text selectable style={styles.metaText}>{i18n.t("ui.last_login")}{selectedUser?.last_login ? new Date(selectedUser.last_login).toLocaleString() : '--'}</Text>
-        <Text selectable style={styles.metaText}>{i18n.t("ui.gender")}{settings?.gender || '--'}</Text>
+        <Text selectable style={styles.metaText}>{i18n.t("ui.created_2")} {selectedUser?.created_at ? new Date(selectedUser.created_at).toLocaleDateString() : '--'}</Text>
+        <Text selectable style={styles.metaText}>{i18n.t("ui.last_login")} {selectedUser?.last_login ? new Date(selectedUser.last_login).toLocaleString() : '--'}</Text>
+        <Text selectable style={styles.metaText}>{i18n.t("ui.gender")} {settings?.gender || '--'}</Text>
       </View>
 
       <TouchableOpacity style={[styles.saveButton, isSaving && styles.disabledButton]} onPress={handleSave} disabled={isSaving}>
@@ -265,7 +265,7 @@ const AdminUserDetailsScreen = () => {
       </View>
       <View style={styles.itemInfo}>
         <Text selectable style={styles.itemName}>{item.name}</Text>
-        {type === 'foods' ? <Text selectable style={styles.itemSubtext}>{item.calories_per_100g}{i18n.t("ui.kcal_100g")}</Text> : <Text selectable style={styles.itemSubtext}>{item.muscleGroups?.map(group => group.name).join(', ') || i18n.t("ui.no_muscle_groups")}</Text>}
+        {type === 'foods' ? <Text selectable style={styles.itemSubtext}>{item.calories_per_100g} {i18n.t("ui.kcal_100g")}</Text> : <Text selectable style={styles.itemSubtext}>{item.muscleGroups?.map(group => group.name).join(', ') || i18n.t("ui.no_muscle_groups")}</Text>}
       </View>
       <Ionicons name="chevron-forward" size={20} color="rgba(255, 255, 255, 0.5)" />
     </TouchableOpacity>;

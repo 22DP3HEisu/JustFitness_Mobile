@@ -336,7 +336,7 @@ const ExerciseDetailsScreen = () => {
     return <View style={styles.tagsContainer}>
         {groups.map(group => <View key={`${group.isPrimary ? 'primary' : 'secondary'}-${group.id}`} style={[styles.tag, group.isPrimary && styles.primaryTag]}>
             <Text style={[styles.tagText, group.isPrimary && styles.primaryTagText]}>
-              {group.name}{group.isPrimary ? i18n.t("ui.primary") : ''}
+              {group.isPrimary ? `${group.name} ${i18n.t("ui.primary")}` : group.name}
             </Text>
           </View>)}
       </View>;
